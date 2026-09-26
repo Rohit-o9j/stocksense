@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 960" width="1280" height="960" role="img" aria-label="Close view of a handheld scanner reading a barcode label on a carton">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2B1F28"/>
+      <stop offset="1" stop-color="#120C10"/>
+    </linearGradient>
+    <linearGradient id="carton" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CE9767"/>
+      <stop offset="1" stop-color="#9A6840"/>
+    </linearGradient>
+    <linearGradient id="ray" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#63D19B" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#63D19B" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="960" fill="url(#bg)"/>
+
+  <!-- soft pool of light behind the carton -->
+  <ellipse cx="640" cy="520" rx="470" ry="330" fill="#F0C98A" opacity=".07"/>
+
+  <!-- carton, angled -->
+  <g transform="translate(250 250) rotate(-5)">
+    <rect width="620" height="440" rx="14" fill="url(#carton)"/>
+    <!-- tape seam -->
+    <rect x="292" width="38" height="440" fill="#8B5E38" opacity=".5"/>
+    <!-- flap shadow -->
+    <path d="M0 0h620v54H0Z" fill="#7E5432" opacity=".35"/>
+
+    <!-- shipping label -->
+    <g transform="translate(72 116)">
+      <rect width="330" height="216" rx="10" fill="#F4F6F5"/>
+      <rect x="24" y="24" width="150" height="9" rx="4" fill="#2B1F28"/>
+      <rect x="24" y="43" width="104" height="7" rx="3" fill="#2B1F28" opacity=".45"/>
+
+      <!-- barcode -->
+      <g transform="translate(24 74)" fill="#1B1419">
+        <rect x="0" width="6" height="86"/><rect x="12" width="3" height="86"/><rect x="21" width="8" height="86"/>
+        <rect x="35" width="3" height="86"/><rect x="44" width="6" height="86"/><rect x="56" width="10" height="86"/>
+        <rect x="72" width="3" height="86"/><rect x="81" width="6" height="86"/><rect x="93" width="4" height="86"/>
+        <rect x="103" width="9" height="86"/><rect x="118" width="3" height="86"/><rect x="127" width="6" height="86"/>
+        <rect x="139" width="8" height="86"/><rect x="153" width="3" height="86"/><rect x="162" width="6" height="86"/>
+        <rect x="174" width="4" height="86"/><rect x="184" width="10" height="86"/><rect x="200" width="3" height="86"/>
+        <rect x="209" width="7" height="86"/><rect x="222" width="4" height="86"/><rect x="232" width="6" height="86"/>
+        <rect x="244" width="3" height="86"/><rect x="253" width="9" height="86"/><rect x="268" width="4" height="86"/>
+        <rect x="278" width="6" height="86"/>
+      </g>
+      <rect x="24" y="174" width="200" height="8" rx="3" fill="#1B1419" opacity=".8"/>
+      <rect x="24" y="190" width="132" height="6" rx="3" fill="#1B1419" opacity=".4"/>
+    </g>
+
+    <!-- small quantity stencil -->
+    <g transform="translate(440 150)" fill="#6F4728" opacity=".62">
+      <rect width="112" height="8" rx="4"/>
+      <rect y="20" width="80" height="8" rx="4"/>
+      <rect y="40" width="96" height="8" rx="4"/>
+    </g>
+  </g>
+
+  <!-- scan beam sweeping the barcode -->
+  <path d="M1010 470 360 400v58l650 74Z" fill="url(#ray)"/>
+  <rect x="352" y="418" width="330" height="4" rx="2" fill="#7CE8B2" opacity=".95"/>
+
+  <!-- handheld scanner, foreground right -->
+  <g transform="translate(940 350) rotate(9)">
+    <!-- body -->
+    <path d="M40 0h150c18 0 32 14 32 32v92c0 18-14 32-32 32H96l-26 78c-6 18-24 28-42 24-18-4-28-22-24-40L40 0Z" fill="#1E1822"/>
+    <path d="M52 16h134c10 0 18 8 18 18v78c0 10-8 18-18 18H74Z" fill="#2C2431"/>
+    <!-- screen -->
+    <rect x="70" y="34" width="104" height="52" rx="6" fill="#63D19B" opacity=".9"/>
+    <rect x="80" y="46" width="58" height="6" rx="3" fill="#123A2A"/>
+    <rect x="80" y="60" width="78" height="5" rx="2" fill="#123A2A" opacity=".7"/>
+    <!-- emitter window -->
+    <rect x="4" y="30" width="18" height="64" rx="5" fill="#7CE8B2" opacity=".85"/>
+    <!-- trigger -->
+    <rect x="56" y="150" width="34" height="16" rx="6" fill="#E9C46A" opacity=".85"/>
+  </g>
+
+  <!-- read confirmation chip -->
+  <g transform="translate(792 690)">
+    <rect width="272" height="68" rx="34" fill="#0F2A20" opacity=".92"/>
+    <circle cx="42" cy="34" r="16" fill="#63D19B"/>
+    <path d="M35 34l5 6 11-13" stroke="#0F2A20" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="76" y="20" width="112" height="9" rx="4" fill="#CFEFE0"/>
+    <rect x="76" y="38" width="160" height="7" rx="3" fill="#CFEFE0" opacity=".55"/>
+  </g>
+</svg>

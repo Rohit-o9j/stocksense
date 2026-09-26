@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 1024" width="1536" height="1024" role="img" aria-label="Warehouse shelving stacked with inventory, a worker scanning a carton">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2A1D26"/>
+      <stop offset="1" stop-color="#150E13"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241A21"/>
+      <stop offset="1" stop-color="#0E090C"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F0C98A" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#F0C98A" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="crateA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C98F5F"/>
+      <stop offset="1" stop-color="#9C6B42"/>
+    </linearGradient>
+    <linearGradient id="crateB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B57E52"/>
+      <stop offset="1" stop-color="#875B38"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1536" height="1024" fill="url(#wall)"/>
+  <rect y="742" width="1536" height="282" fill="url(#floor)"/>
+
+  <!-- overhead light wash -->
+  <path d="M470 0h300l260 742H210Z" fill="url(#beam)"/>
+
+  <!-- back racking silhouette -->
+  <g opacity=".30" fill="#6E5466">
+    <rect x="90" y="250" width="14" height="492"/><rect x="430" y="250" width="14" height="492"/>
+    <rect x="770" y="250" width="14" height="492"/><rect x="1110" y="250" width="14" height="492"/>
+    <rect x="1436" y="250" width="14" height="492"/>
+    <rect x="90" y="250" width="1360" height="12"/><rect x="90" y="420" width="1360" height="12"/>
+    <rect x="90" y="590" width="1360" height="12"/>
+  </g>
+
+  <!-- pallet racking, mid ground -->
+  <g>
+    <g fill="#4A3644">
+      <rect x="150" y="196" width="22" height="546" rx="4"/>
+      <rect x="690" y="196" width="22" height="546" rx="4"/>
+      <rect x="1230" y="196" width="22" height="546" rx="4"/>
+      <rect x="150" y="196" width="1102" height="18" rx="5"/>
+      <rect x="150" y="394" width="1102" height="18" rx="5"/>
+      <rect x="150" y="592" width="1102" height="18" rx="5"/>
+    </g>
+
+    <!-- top shelf cartons -->
+    <g>
+      <rect x="196" y="272" width="150" height="122" rx="6" fill="url(#crateA)"/>
+      <rect x="196" y="316" width="150" height="9" fill="#7E5432" opacity=".55"/>
+      <rect x="360" y="286" width="126" height="108" rx="6" fill="url(#crateB)"/>
+      <rect x="360" y="326" width="126" height="9" fill="#6F4728" opacity=".55"/>
+      <rect x="742" y="264" width="164" height="130" rx="6" fill="url(#crateA)"/>
+      <rect x="742" y="312" width="164" height="9" fill="#7E5432" opacity=".55"/>
+      <rect x="920" y="292" width="118" height="102" rx="6" fill="url(#crateB)"/>
+      <rect x="1064" y="278" width="140" height="116" rx="6" fill="url(#crateA)"/>
+      <rect x="1064" y="322" width="140" height="9" fill="#7E5432" opacity=".55"/>
+    </g>
+
+    <!-- middle shelf: labelled totes -->
+    <g>
+      <rect x="196" y="470" width="176" height="122" rx="8" fill="#3E5C56"/>
+      <rect x="220" y="498" width="128" height="34" rx="4" fill="#E8EFEC" opacity=".92"/>
+      <rect x="228" y="508" width="70" height="5" rx="2" fill="#3E5C56"/>
+      <rect x="228" y="518" width="98" height="5" rx="2" fill="#3E5C56" opacity=".6"/>
+
+      <rect x="392" y="470" width="176" height="122" rx="8" fill="#4B4360"/>
+      <rect x="416" y="498" width="128" height="34" rx="4" fill="#E8EFEC" opacity=".92"/>
+      <rect x="424" y="508" width="60" height="5" rx="2" fill="#4B4360"/>
+      <rect x="424" y="518" width="92" height="5" rx="2" fill="#4B4360" opacity=".6"/>
+
+      <rect x="742" y="470" width="176" height="122" rx="8" fill="#3E5C56"/>
+      <rect x="766" y="498" width="128" height="34" rx="4" fill="#E8EFEC" opacity=".92"/>
+      <rect x="774" y="508" width="82" height="5" rx="2" fill="#3E5C56"/>
+      <rect x="774" y="518" width="104" height="5" rx="2" fill="#3E5C56" opacity=".6"/>
+
+      <rect x="938" y="470" width="176" height="122" rx="8" fill="#4B4360"/>
+      <rect x="962" y="498" width="128" height="34" rx="4" fill="#E8EFEC" opacity=".92"/>
+      <rect x="970" y="508" width="66" height="5" rx="2" fill="#4B4360"/>
+      <rect x="970" y="518" width="88" height="5" rx="2" fill="#4B4360" opacity=".6"/>
+    </g>
+
+    <!-- bottom shelf pallets -->
+    <g fill="#5A4252">
+      <rect x="200" y="672" width="180" height="16" rx="3"/><rect x="214" y="688" width="20" height="46"/><rect x="346" y="688" width="20" height="46"/>
+      <rect x="760" y="672" width="180" height="16" rx="3"/><rect x="774" y="688" width="20" height="46"/><rect x="906" y="688" width="20" height="46"/>
+    </g>
+    <rect x="212" y="612" width="156" height="60" rx="5" fill="url(#crateB)"/>
+    <rect x="772" y="612" width="156" height="60" rx="5" fill="url(#crateA)"/>
+  </g>
+
+  <!-- foreground worker with scanner -->
+  <g transform="translate(1120 372)">
+    <!-- legs -->
+    <path d="M52 250h30l6 118H54Z" fill="#241C2A"/>
+    <path d="M96 250h30l14 118h-34Z" fill="#2E2434"/>
+    <!-- torso -->
+    <path d="M40 116h104c10 0 16 8 15 18l-14 122H41L28 134c-1-10 4-18 12-18Z" fill="#714B67"/>
+    <!-- hi-vis band -->
+    <rect x="33" y="176" width="118" height="20" rx="6" fill="#E9C46A" opacity=".9"/>
+    <!-- head -->
+    <circle cx="92" cy="80" r="33" fill="#D9A97F"/>
+    <path d="M59 72c0-20 15-34 33-34s33 14 33 34Z" fill="#33262F"/>
+    <!-- arm reaching to shelf -->
+    <path d="M40 140c-26 10-52 26-66 44l22 22c16-14 34-26 52-32Z" fill="#7E5674"/>
+    <!-- scanner in hand -->
+    <g transform="translate(-52 178) rotate(-18)">
+      <rect width="56" height="30" rx="7" fill="#1C1620"/>
+      <rect x="8" y="7" width="30" height="16" rx="3" fill="#63D19B" opacity=".85"/>
+      <rect x="44" y="11" width="10" height="8" rx="2" fill="#E9C46A"/>
+    </g>
+    <!-- scan ray toward tote -->
+    <path d="M-44 190 -206 150l4 22 160 40Z" fill="#63D19B" opacity=".28"/>
+  </g>
+
+  <!-- floor sheen -->
+  <ellipse cx="768" cy="906" rx="640" ry="58" fill="#F0C98A" opacity=".05"/>
+</svg>

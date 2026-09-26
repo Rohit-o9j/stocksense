@@ -53,7 +53,11 @@ export const kindEnum = pgEnum('operation_kind', [
   'Adjustment',
 ]);
 
-export const roleEnum = pgEnum('user_role', ['Inventory Manager', 'Warehouse Staff']);
+/**
+ * Access levels, least to most privileged. Admin inherits everything an
+ * Inventory Manager can do, plus user management and demo data control.
+ */
+export const roleEnum = pgEnum('user_role', ['Warehouse Staff', 'Inventory Manager', 'Admin']);
 
 /**
  * Internal locations hold real stock. Vendor / Customer / Inventory Loss are
