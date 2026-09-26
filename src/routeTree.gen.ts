@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as DeliveryOrdersRouteImport } from './routes/delivery-orders'
 import { Route as InternalTransfersRouteImport } from './routes/internal-transfers'
@@ -28,6 +29,11 @@ import { Route as ReceiptsIdRouteImport } from './routes/receipts.$id'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesRoute = CategoriesRouteImport.update({
@@ -103,6 +109,7 @@ const ReceiptsIdRoute = ReceiptsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/delivery-orders': typeof DeliveryOrdersRoute
   '/internal-transfers': typeof InternalTransfersRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/delivery-orders': typeof DeliveryOrdersRoute
   '/internal-transfers': typeof InternalTransfersRoute
@@ -136,6 +144,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/delivery-orders': typeof DeliveryOrdersRoute
   '/internal-transfers': typeof InternalTransfersRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/categories'
     | '/delivery-orders'
     | '/internal-transfers'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/categories'
     | '/delivery-orders'
     | '/internal-transfers'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CategoriesRoute: typeof CategoriesRoute
+  AuthRoute: typeof AuthRoute
   DeliveryOrdersRoute: typeof DeliveryOrdersRoute
   InternalTransfersRoute: typeof InternalTransfersRoute
   InventoryAdjustmentsRoute: typeof InventoryAdjustmentsRoute
@@ -224,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories': {
@@ -358,6 +377,7 @@ const ReceiptsRouteWithChildren = ReceiptsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CategoriesRoute: CategoriesRoute,
+  AuthRoute: AuthRoute,
   DeliveryOrdersRoute: DeliveryOrdersRoute,
   InternalTransfersRoute: InternalTransfersRoute,
   InventoryAdjustmentsRoute: InventoryAdjustmentsRoute,
