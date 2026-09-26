@@ -1,0 +1,3 @@
+- [x] Build StockSense shell, shared mock inventory, and navigable screens.
+- [x] Complete receipt validation, counting sheet, dashboard filters, ledger, and command palette.
+- [x] Audit accessibility and verify sample Steel Rods history and responsive behavior.

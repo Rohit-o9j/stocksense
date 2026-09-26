@@ -182,6 +182,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/categories'
     | '/delivery-orders'
     | '/internal-transfers'
@@ -216,8 +217,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CategoriesRoute: typeof CategoriesRoute
   AuthRoute: typeof AuthRoute
+  CategoriesRoute: typeof CategoriesRoute
   DeliveryOrdersRoute: typeof DeliveryOrdersRoute
   InternalTransfersRoute: typeof InternalTransfersRoute
   InventoryAdjustmentsRoute: typeof InventoryAdjustmentsRoute
@@ -376,8 +377,8 @@ const ReceiptsRouteWithChildren = ReceiptsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CategoriesRoute: CategoriesRoute,
   AuthRoute: AuthRoute,
+  CategoriesRoute: CategoriesRoute,
   DeliveryOrdersRoute: DeliveryOrdersRoute,
   InternalTransfersRoute: InternalTransfersRoute,
   InventoryAdjustmentsRoute: InventoryAdjustmentsRoute,
