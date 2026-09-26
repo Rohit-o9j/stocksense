@@ -3,6 +3,7 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
+  useNavigate,
   useRouter,
   useRouterState,
   HeadContent,
@@ -12,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { StockProvider } from "@/lib/stock";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import { StockShell } from "@/components/stock-shell";
 import { Button } from "@/components/ui/button";
 import { captureError } from "../lib/error-reporting";
@@ -101,7 +103,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -124,12 +126,70 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Keeps the URL and the session in agreement: signed-out visitors are sent to
+ * /auth, and signed-in ones are bounced off it. Waits for `isLoading` so a
+ * refresh does not flash the sign-in screen before the cookie is read.
+ */
+/**
+ * Routes that render on their own, without the application shell.
+ *
+ * `/about` is a full-bleed marketing page that ships its own header, nav and
+ * footer, so putting it inside StockShell would give it two sets of chrome. It
+ * also needs no session — its own call to action is what leads into the app.
+ */
+const STANDALONE_ROUTES = new Set(['/auth', '/about']);
+const PUBLIC_ROUTES = new Set(['/auth', '/about']);
+
+function SessionGate() {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  const isAuthRoute = pathname === '/auth';
+  const isPublic = PUBLIC_ROUTES.has(pathname);
+  const isStandalone = STANDALONE_ROUTES.has(pathname);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user && !isPublic) void navigate({ to: '/auth', replace: true });
+    // Only bounce off the sign-in screen; a signed-in user may still read /about.
+    if (user && isAuthRoute) void navigate({ to: '/', replace: true });
+  }, [user, isLoading, isAuthRoute, isPublic, navigate]);
+
+  // Public standalone pages render immediately — no need to wait on the session.
+  if (isStandalone && !isAuthRoute) return <Outlet />;
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Loading StockSense…</p>
+      </div>
+    );
+  }
+
+  if (isStandalone) return <Outlet />;
+
+  // Render nothing rather than an empty shell while the redirect above runs.
+  if (!user) return null;
+
+  return (
+    <StockProvider>
+      <StockShell>
+        <Outlet />
+      </StockShell>
+    </StockProvider>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const isAuth = useRouterState({ select: (state) => state.location.pathname === '/auth' });
+  const isStandalone = useRouterState({ select: (state) => ['/auth', '/about'].includes(state.location.pathname) });
   return (
     <QueryClientProvider client={queryClient}>
-    <StockProvider>{isAuth ? <Outlet /> : <StockShell><Outlet /></StockShell>}</StockProvider>
+      <AuthProvider>
+        <SessionGate />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
