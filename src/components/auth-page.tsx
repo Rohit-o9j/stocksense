@@ -1,32 +1,32 @@
-import { useState, type FormEvent } from 'react';
-import { Boxes, Eye, EyeOff, ArrowLeft, Mail, Loader2 } from 'lucide-react';
-import { Toaster, toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/auth';
-import illustration from '@/assets/auth-illustration.png';
+import { useState, type FormEvent } from "react";
+import { Boxes, Eye, EyeOff, ArrowLeft, Mail, Loader2 } from "lucide-react";
+import { Toaster, toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import illustration from "@/assets/auth-illustration.png";
 
-type View = 'signin' | 'signup' | 'forgot' | 'reset';
+type View = "signin" | "signup" | "forgot" | "reset";
 
 function describe(error: unknown): string {
   if (error instanceof Error) return error.message;
-  return 'Something went wrong. Try again.';
+  return "Something went wrong. Try again.";
 }
 
 export function AuthPage() {
   const { signIn, signUp, requestPasswordOtp, resetPassword } = useAuth();
 
-  const [view, setView] = useState<View>('signin');
+  const [view, setView] = useState<View>("signin");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   /** Carried from the forgot step into the reset step. */
-  const [resetEmail, setResetEmail] = useState('');
+  const [resetEmail, setResetEmail] = useState("");
 
   const changeView = (next: View) => {
     setView(next);
-    setError('');
-    setNotice('');
+    setError("");
+    setNotice("");
     setShowPassword(false);
   };
 
@@ -36,44 +36,44 @@ export function AuthPage() {
     if (!form.reportValidity()) return;
 
     const values = new FormData(form);
-    const read = (field: string) => String(values.get(field) ?? '');
+    const read = (field: string) => String(values.get(field) ?? "");
 
     setBusy(true);
-    setError('');
-    setNotice('');
+    setError("");
+    setNotice("");
 
     try {
-      if (view === 'signin') {
-        await signIn(read('email'), read('password'));
-        toast.success('Signed in');
+      if (view === "signin") {
+        await signIn(read("email"), read("password"));
+        toast.success("Signed in");
         // The session gate in __root redirects once the user is known.
-      } else if (view === 'signup') {
+      } else if (view === "signup") {
         // Role is assigned by the server, never requested by the client.
         await signUp({
-          name: read('name'),
-          email: read('email'),
-          password: read('password'),
+          name: read("name"),
+          email: read("email"),
+          password: read("password"),
         });
-        toast.success('Account created');
-      } else if (view === 'forgot') {
-        const email = read('email');
+        toast.success("Account created");
+      } else if (view === "forgot") {
+        const email = read("email");
         const result = await requestPasswordOtp(email);
         setResetEmail(email);
-        setView('reset');
+        setView("reset");
         setNotice(
           result.devCode === undefined
-            ? 'If that address has an account, a 6 digit code is on its way.'
+            ? "If that address has an account, a 6 digit code is on its way."
             : `No mail provider is configured, so here is the code: ${result.devCode}`,
         );
       } else {
         await resetPassword({
           email: resetEmail,
-          code: read('code'),
-          password: read('password'),
+          code: read("code"),
+          password: read("password"),
         });
-        toast.success('Password updated');
-        setView('signin');
-        setNotice('Your password was updated. Sign in with the new one.');
+        toast.success("Password updated");
+        setView("signin");
+        setNotice("Your password was updated. Sign in with the new one.");
       }
     } catch (caught) {
       setError(describe(caught));
@@ -83,31 +83,31 @@ export function AuthPage() {
   };
 
   const heading =
-    view === 'signin'
-      ? 'Welcome back'
-      : view === 'signup'
-        ? 'Create an account'
-        : view === 'forgot'
-          ? 'Forgot password?'
-          : 'Enter your code';
+    view === "signin"
+      ? "Welcome back"
+      : view === "signup"
+        ? "Create an account"
+        : view === "forgot"
+          ? "Forgot password?"
+          : "Enter your code";
 
   const subheading =
-    view === 'signin'
-      ? 'Please enter your details'
-      : view === 'signup'
-        ? 'Enter your details to get started'
-        : view === 'forgot'
-          ? 'Enter your email address and we will send a 6 digit code'
+    view === "signin"
+      ? "Please enter your details"
+      : view === "signup"
+        ? "Enter your details to get started"
+        : view === "forgot"
+          ? "Enter your email address and we will send a 6 digit code"
           : `Code sent for ${resetEmail}`;
 
   const submitLabel =
-    view === 'signin'
-      ? 'Sign in'
-      : view === 'signup'
-        ? 'Sign up'
-        : view === 'forgot'
-          ? 'Send code'
-          : 'Update password';
+    view === "signin"
+      ? "Sign in"
+      : view === "signup"
+        ? "Sign up"
+        : view === "forgot"
+          ? "Send code"
+          : "Update password";
 
   return (
     <div className="grid min-h-dvh bg-card text-foreground font-auth md:h-dvh md:grid-cols-2 md:overflow-hidden">
@@ -126,11 +126,11 @@ export function AuthPage() {
 
         <div className="flex flex-1 items-center justify-center py-12">
           <div className="w-full max-w-[304px]">
-            {view !== 'signin' && (
+            {view !== "signin" && (
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => changeView('signin')}
+                onClick={() => changeView("signin")}
                 className="-ml-2 mb-6 h-8 px-2 text-muted-foreground"
               >
                 <ArrowLeft className="size-4" /> Back to sign in
@@ -150,7 +150,7 @@ export function AuthPage() {
             )}
 
             <form key={view} onSubmit={handleSubmit} className="mt-7 space-y-4">
-              {view === 'signup' && (
+              {view === "signup" && (
                 <div>
                   <label htmlFor="auth-name" className="mb-1.5 block text-[13px] font-semibold">
                     Full name
@@ -167,7 +167,7 @@ export function AuthPage() {
                 </div>
               )}
 
-              {view !== 'reset' && (
+              {view !== "reset" && (
                 <div>
                   <label htmlFor="auth-email" className="mb-1.5 block text-[13px] font-semibold">
                     Email address
@@ -184,14 +184,14 @@ export function AuthPage() {
                 </div>
               )}
 
-              {view === 'signup' && (
+              {view === "signup" && (
                 <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                  New accounts start as Warehouse Staff. An Inventory Manager can
-                  promote you once you are signed up.
+                  New accounts start as Warehouse Staff. An Inventory Manager can promote you once
+                  you are signed up.
                 </p>
               )}
 
-              {view === 'reset' && (
+              {view === "reset" && (
                 <div>
                   <label htmlFor="auth-code" className="mb-1.5 block text-[13px] font-semibold">
                     6 digit code
@@ -210,20 +210,22 @@ export function AuthPage() {
                 </div>
               )}
 
-              {view !== 'forgot' && (
+              {view !== "forgot" && (
                 <div>
                   <label htmlFor="auth-password" className="mb-1.5 block text-[13px] font-semibold">
-                    {view === 'reset' ? 'New password' : 'Password'}
+                    {view === "reset" ? "New password" : "Password"}
                   </label>
                   <div className="relative">
                     <input
                       id="auth-password"
                       name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete={view === 'signin' ? 'current-password' : 'new-password'}
+                      type={showPassword ? "text" : "password"}
+                      autoComplete={view === "signin" ? "current-password" : "new-password"}
                       required
                       minLength={8}
-                      placeholder={view === 'signin' ? 'Enter your password' : 'At least 8 characters'}
+                      placeholder={
+                        view === "signin" ? "Enter your password" : "At least 8 characters"
+                      }
                       className="auth-input pr-11"
                     />
                     <Button
@@ -231,7 +233,7 @@ export function AuthPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => setShowPassword((value) => !value)}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                       aria-pressed={showPassword}
                       className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:bg-transparent hover:text-foreground"
                     >
@@ -241,12 +243,12 @@ export function AuthPage() {
                 </div>
               )}
 
-              {view === 'signin' && (
+              {view === "signin" && (
                 <div className="flex items-center justify-end pt-0.5 text-xs">
                   <Button
                     type="button"
                     variant="link"
-                    onClick={() => changeView('forgot')}
+                    onClick={() => changeView("forgot")}
                     className="h-auto shrink-0 p-0 text-xs font-semibold text-primary"
                   >
                     Forgot password
@@ -261,7 +263,7 @@ export function AuthPage() {
                   className="h-11 w-full rounded-md text-sm font-semibold active:scale-[.99]"
                 >
                   {busy && <Loader2 className="size-4 animate-spin" />}
-                  {busy ? 'Working…' : submitLabel}
+                  {busy ? "Working…" : submitLabel}
                 </Button>
               </div>
             </form>
@@ -276,13 +278,13 @@ export function AuthPage() {
               </p>
             )}
 
-            {view === 'signin' && (
+            {view === "signin" && (
               <p className="mt-8 text-center text-[13px] text-muted-foreground">
-                Don&apos;t have an account?{' '}
+                Don&apos;t have an account?{" "}
                 <Button
                   type="button"
                   variant="link"
-                  onClick={() => changeView('signup')}
+                  onClick={() => changeView("signup")}
                   className="h-auto p-0 text-[13px] font-semibold text-primary underline underline-offset-2"
                 >
                   Sign up
@@ -290,13 +292,13 @@ export function AuthPage() {
               </p>
             )}
 
-            {view === 'signup' && (
+            {view === "signup" && (
               <p className="mt-8 text-center text-[13px] text-muted-foreground">
-                Already have an account?{' '}
+                Already have an account?{" "}
                 <Button
                   type="button"
                   variant="link"
-                  onClick={() => changeView('signin')}
+                  onClick={() => changeView("signin")}
                   className="h-auto p-0 text-[13px] font-semibold text-primary underline underline-offset-2"
                 >
                   Sign in

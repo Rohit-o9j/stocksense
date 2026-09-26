@@ -4,19 +4,19 @@
  * Each one owns its open state and talks to the store, so the page components
  * only need to drop the button in.
  */
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, type FormEvent, type ReactNode } from "react";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { useStock, type Product } from '@/lib/stock';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { useStock, type Product } from "@/lib/stock";
 
-const field = 'mt-1.5 w-full rounded-md border border-input bg-background px-3 h-9 text-sm';
+const field = "mt-1.5 w-full rounded-md border border-input bg-background px-3 h-9 text-sm";
 
 function describe(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong';
+  return error instanceof Error ? error.message : "Something went wrong";
 }
 
 /** Shared shell: a trigger button, a form dialog, busy state and error display. */
@@ -38,8 +38,8 @@ function FormDialog({
   const { role } = useStock();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const readOnly = role === 'Warehouse Staff';
+  const [error, setError] = useState("");
+  const readOnly = role === "Warehouse Staff";
 
   const handle = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -47,11 +47,11 @@ function FormDialog({
     if (!form.reportValidity()) return;
 
     setBusy(true);
-    setError('');
+    setError("");
     try {
       await onSubmit(new FormData(form));
       setOpen(false);
-      toast.success(`${title.replace(/^New /, '')} saved`);
+      toast.success(`${title.replace(/^New /, "")} saved`);
     } catch (caught) {
       setError(describe(caught));
     } finally {
@@ -62,7 +62,7 @@ function FormDialog({
   return (
     <>
       {trigger(() => {
-        setError('');
+        setError("");
         setOpen(true);
       }, readOnly)}
       <Dialog
@@ -94,7 +94,7 @@ function FormDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={busy}>
-                {busy ? 'Saving…' : submitLabel}
+                {busy ? "Saving…" : submitLabel}
               </Button>
             </div>
           </form>
@@ -107,7 +107,7 @@ function FormDialog({
 function masterTrigger(label: string) {
   return (open: () => void, disabled: boolean) => (
     <span
-      title={disabled ? 'Inventory Manager access required' : undefined}
+      title={disabled ? "Inventory Manager access required" : undefined}
       className="inline-flex"
     >
       <Button onClick={open} disabled={disabled}>
@@ -122,20 +122,20 @@ export function NewProductButton() {
 
   return (
     <FormDialog
-      trigger={masterTrigger('New Product')}
+      trigger={masterTrigger("New Product")}
       title="New Product"
       description="Opening stock is recorded as a real receipt, so it appears in Move History."
       submitLabel="Create product"
       onSubmit={async (values) => {
-        const initial = Number(values.get('initialStock') ?? 0);
-        const min = Number(values.get('minQty') ?? 0);
-        const max = Number(values.get('maxQty') ?? 0);
+        const initial = Number(values.get("initialStock") ?? 0);
+        const min = Number(values.get("minQty") ?? 0);
+        const max = Number(values.get("maxQty") ?? 0);
         await createProduct({
-          name: String(values.get('name') ?? ''),
-          sku: String(values.get('sku') ?? ''),
-          category: String(values.get('category') ?? ''),
-          unit: String(values.get('unit') ?? ''),
-          location: String(values.get('location') ?? ''),
+          name: String(values.get("name") ?? ""),
+          sku: String(values.get("sku") ?? ""),
+          category: String(values.get("category") ?? ""),
+          unit: String(values.get("unit") ?? ""),
+          location: String(values.get("location") ?? ""),
           ...(initial > 0 && { initialStock: initial }),
           ...(min > 0 && { minQty: min }),
           ...(max > 0 && { maxQty: max }),
@@ -195,12 +195,12 @@ export function NewCategoryButton() {
 
   return (
     <FormDialog
-      trigger={masterTrigger('New Category')}
+      trigger={masterTrigger("New Category")}
       title="New Category"
       description="Categories group products for filtering and reporting."
       submitLabel="Create category"
       onSubmit={async (values) => {
-        await createCategory(String(values.get('name') ?? ''));
+        await createCategory(String(values.get("name") ?? ""));
       }}
     >
       <label className="block text-xs font-medium text-muted-foreground">
@@ -216,15 +216,15 @@ export function NewWarehouseButton() {
 
   return (
     <FormDialog
-      trigger={masterTrigger('New Warehouse')}
+      trigger={masterTrigger("New Warehouse")}
       title="New Warehouse"
       description="A Stock location is created automatically so the warehouse can receive goods."
       submitLabel="Create warehouse"
       onSubmit={async (values) => {
-        const address = String(values.get('address') ?? '').trim();
+        const address = String(values.get("address") ?? "").trim();
         await createWarehouse({
-          name: String(values.get('name') ?? ''),
-          code: String(values.get('code') ?? ''),
+          name: String(values.get("name") ?? ""),
+          code: String(values.get("code") ?? ""),
           ...(address && { address }),
         });
       }}
@@ -252,7 +252,7 @@ export function AddLocationButton({ warehouseCode }: { warehouseCode: string }) 
     <FormDialog
       trigger={(open, disabled) => (
         <span
-          title={disabled ? 'Inventory Manager access required' : undefined}
+          title={disabled ? "Inventory Manager access required" : undefined}
           className="inline-flex"
         >
           <Button variant="outline" size="sm" onClick={open} disabled={disabled}>
@@ -264,7 +264,7 @@ export function AddLocationButton({ warehouseCode }: { warehouseCode: string }) 
       description="Locations sit inside a warehouse and hold stock."
       submitLabel="Create location"
       onSubmit={async (values) => {
-        await createLocation(warehouseCode, String(values.get('name') ?? ''));
+        await createLocation(warehouseCode, String(values.get("name") ?? ""));
       }}
     >
       <label className="block text-xs font-medium text-muted-foreground">
@@ -281,7 +281,7 @@ export function EditRuleButton({ product }: { product: Product }) {
   return (
     <FormDialog
       trigger={(open, disabled) => (
-        <span title={disabled ? 'Inventory Manager access required' : undefined}>
+        <span title={disabled ? "Inventory Manager access required" : undefined}>
           <Button size="sm" variant="ghost" onClick={open} disabled={disabled}>
             Edit
           </Button>
@@ -293,8 +293,8 @@ export function EditRuleButton({ product }: { product: Product }) {
       onSubmit={async (values) => {
         await saveReorderingRule(
           product.id,
-          Number(values.get('minQty') ?? 0),
-          Number(values.get('maxQty') ?? 0),
+          Number(values.get("minQty") ?? 0),
+          Number(values.get("maxQty") ?? 0),
         );
       }}
     >

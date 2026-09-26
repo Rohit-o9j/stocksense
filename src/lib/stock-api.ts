@@ -8,14 +8,14 @@
  * Every quantity change goes through the stock engine inside a transaction —
  * nothing here writes `stock_quants` directly.
  */
-import { createServerFn } from '@tanstack/react-start';
-import { and, desc, eq } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
-import { z } from 'zod';
+import { createServerFn } from "@tanstack/react-start";
+import { and, desc, eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
+import { z } from "zod";
 
-import { db, type Executor } from '../db';
-import { applyMove, getOnHand, nextReference } from '../db/stock-engine';
-import { requireManager, requireUser } from './guards';
+import { db, type Executor } from "../db";
+import { applyMove, getOnHand, nextReference } from "../db/stock-engine";
+import { requireManager, requireUser } from "./guards";
 import {
   categories,
   locations,
@@ -27,14 +27,14 @@ import {
   stockQuants,
   users,
   warehouses,
-} from '../db/schema';
+} from "../db/schema";
 
 // ---------------------------------------------------------------------------
 // Shapes returned to the client — mirror src/lib/stock.tsx
 // ---------------------------------------------------------------------------
 
-export type Status = 'Draft' | 'Waiting' | 'Ready' | 'Done' | 'Canceled';
-export type Kind = 'Receipt' | 'Delivery' | 'Internal Transfer' | 'Adjustment';
+export type Status = "Draft" | "Waiting" | "Ready" | "Done" | "Canceled";
+export type Kind = "Receipt" | "Delivery" | "Internal Transfer" | "Adjustment";
 
 export type ProductDto = {
   id: string;
@@ -93,7 +93,7 @@ export type LocationDto = {
   id: string;
   name: string;
   fullName: string;
-  kind: 'Internal' | 'Vendor' | 'Customer' | 'Inventory Loss';
+  kind: "Internal" | "Vendor" | "Customer" | "Inventory Loss";
   warehouseCode: string | null;
 };
 
@@ -111,7 +111,7 @@ export type SnapshotDto = {
   quants: QuantDto[];
 };
 
-const STATUSES = ['Draft', 'Waiting', 'Ready', 'Done', 'Canceled'] as const;
+const STATUSES = ["Draft", "Waiting", "Ready", "Done", "Canceled"] as const;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -140,12 +140,12 @@ async function firstInternalLocationId(tx: Executor): Promise<string> {
   const [row] = await tx
     .select({ id: locations.id })
     .from(locations)
-    .where(and(eq(locations.kind, 'Internal'), eq(locations.active, true)))
+    .where(and(eq(locations.kind, "Internal"), eq(locations.active, true)))
     .orderBy(locations.fullName)
     .limit(1);
 
   if (!row) {
-    throw new Error('No storage locations exist yet. Run: bun run db:seed');
+    throw new Error("No storage locations exist yet. Run: bun run db:seed");
   }
   return row.id;
 }
@@ -155,10 +155,10 @@ async function firstInternalLocationId(tx: Executor): Promise<string> {
 // ---------------------------------------------------------------------------
 
 async function loadSnapshot(): Promise<SnapshotDto> {
-  const sourceLocation = alias(locations, 'source_location');
-  const destLocation = alias(locations, 'dest_location');
-  const fromLocation = alias(locations, 'from_location');
-  const toLocation = alias(locations, 'to_location');
+  const sourceLocation = alias(locations, "source_location");
+  const destLocation = alias(locations, "dest_location");
+  const fromLocation = alias(locations, "from_location");
+  const toLocation = alias(locations, "to_location");
 
   const productRows = await db
     .select({
@@ -197,7 +197,7 @@ async function loadSnapshot(): Promise<SnapshotDto> {
   const internalLocations = await db
     .select({ fullName: locations.fullName, warehouseId: locations.warehouseId })
     .from(locations)
-    .where(and(eq(locations.kind, 'Internal'), eq(locations.active, true)))
+    .where(and(eq(locations.kind, "Internal"), eq(locations.active, true)))
     .orderBy(locations.fullName);
 
   // Fallback "default location" for a product with no stock anywhere: the first
@@ -231,13 +231,13 @@ async function loadSnapshot(): Promise<SnapshotDto> {
     const fallback =
       (rule?.warehouseId ? warehouseDefault.get(rule.warehouseId) : undefined) ??
       internalLocations[0]?.fullName ??
-      '';
+      "";
 
     return {
       id: row.id,
       name: row.name,
       sku: row.sku,
-      category: row.category ?? 'Uncategorized',
+      category: row.category ?? "Uncategorized",
       unit: row.unit,
       onHand,
       minimum: rule?.minQty ?? 0,
@@ -285,21 +285,19 @@ async function loadSnapshot(): Promise<SnapshotDto> {
   const operationDtos: OperationDto[] = operationRows.map((row) => {
     // The UI shows one location per document; which end is meaningful depends
     // on the kind. Receipts land somewhere, everything else leaves somewhere.
-    const location =
-      row.kind === 'Receipt' ? (row.destName ?? '') : (row.sourceName ?? '');
+    const location = row.kind === "Receipt" ? (row.destName ?? "") : (row.sourceName ?? "");
 
     // For a transfer the counterparty is the destination, not a trading partner.
-    const partner =
-      row.kind === 'Internal Transfer' ? (row.destName ?? '') : (row.partner ?? '');
+    const partner = row.kind === "Internal Transfer" ? (row.destName ?? "") : (row.partner ?? "");
 
     return {
       id: row.reference,
       kind: row.kind,
       status: row.status,
       partner,
-      date: row.scheduledDate ?? '',
+      date: row.scheduledDate ?? "",
       location,
-      source: row.sourceDocument ?? '',
+      source: row.sourceDocument ?? "",
       lines: linesByOperation.get(row.id) ?? [],
     };
   });
@@ -333,7 +331,7 @@ async function loadSnapshot(): Promise<SnapshotDto> {
     quantity: row.quantity,
     kind: row.kind,
     status: row.status,
-    by: row.by ?? '',
+    by: row.by ?? "",
   }));
 
   const categoryRows = await db
@@ -374,7 +372,7 @@ async function loadSnapshot(): Promise<SnapshotDto> {
       id: row.id,
       name: row.name,
       code: row.code,
-      address: row.address ?? '',
+      address: row.address ?? "",
     })),
     locationRows: allLocations,
     // Only rows that actually hold stock; zero quants are noise on screen.
@@ -383,13 +381,13 @@ async function loadSnapshot(): Promise<SnapshotDto> {
       .map((row) => ({
         productId: row.productId,
         location: row.fullName,
-        warehouse: row.warehouseName ?? row.fullName.split(' / ')[0] ?? '',
+        warehouse: row.warehouseName ?? row.fullName.split(" / ")[0] ?? "",
         quantity: row.quantity,
       })),
   };
 }
 
-export const getSnapshot = createServerFn({ method: 'GET' }).handler(
+export const getSnapshot = createServerFn({ method: "GET" }).handler(
   async (): Promise<SnapshotDto> => {
     // Inventory is not public data.
     await requireUser();
@@ -401,20 +399,20 @@ export const getSnapshot = createServerFn({ method: 'GET' }).handler(
 // Write
 // ---------------------------------------------------------------------------
 
-export const createReceipt = createServerFn({ method: 'POST' }).handler(
+export const createReceipt = createServerFn({ method: "POST" }).handler(
   async (): Promise<string> => {
     const actor = await requireUser();
     return db.transaction(async (tx) => {
-      const reference = await nextReference(tx, 'Receipt');
-      const vendors = await locationIdByName(tx, 'Vendors');
+      const reference = await nextReference(tx, "Receipt");
+      const vendors = await locationIdByName(tx, "Vendors");
       // Don't hardcode a warehouse name — use whichever internal location exists.
       const destination = await firstInternalLocationId(tx);
 
       await tx.insert(operations).values({
         reference,
-        kind: 'Receipt',
-        status: 'Draft',
-        partner: '',
+        kind: "Receipt",
+        status: "Draft",
+        partner: "",
         scheduledDate: new Date().toISOString().slice(0, 10),
         sourceLocationId: vendors,
         destLocationId: destination,
@@ -446,15 +444,15 @@ const updateOperationInput = z.object({
   }),
 });
 
-export const updateOperation = createServerFn({ method: 'POST' })
+export const updateOperation = createServerFn({ method: "POST" })
   .validator((input: unknown) => updateOperationInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     await requireUser();
     const { reference, patch } = data;
 
-    if (patch.status === 'Done') {
+    if (patch.status === "Done") {
       throw new Error(
-        'Set status to Done by validating the document, so stock moves are recorded.',
+        "Set status to Done by validating the document, so stock moves are recorded.",
       );
     }
 
@@ -466,21 +464,21 @@ export const updateOperation = createServerFn({ method: 'POST' })
         .limit(1);
 
       if (!operation) throw new Error(`Document ${reference} does not exist`);
-      if (operation.status === 'Done') {
+      if (operation.status === "Done") {
         throw new Error(`${reference} is already validated and cannot be edited`);
       }
 
       const changes: Record<string, unknown> = {};
-      if (patch.partner !== undefined) changes['partner'] = patch.partner;
-      if (patch.date !== undefined) changes['scheduledDate'] = patch.date;
-      if (patch.source !== undefined) changes['sourceDocument'] = patch.source;
-      if (patch.status !== undefined) changes['status'] = patch.status;
+      if (patch.partner !== undefined) changes["partner"] = patch.partner;
+      if (patch.date !== undefined) changes["scheduledDate"] = patch.date;
+      if (patch.source !== undefined) changes["sourceDocument"] = patch.source;
+      if (patch.status !== undefined) changes["status"] = patch.status;
 
       if (patch.location !== undefined) {
         const locationId = await locationIdByName(tx, patch.location);
         // Receipts arrive at the chosen location; everything else leaves from it.
-        if (operation.kind === 'Receipt') changes['destLocationId'] = locationId;
-        else changes['sourceLocationId'] = locationId;
+        if (operation.kind === "Receipt") changes["destLocationId"] = locationId;
+        else changes["sourceLocationId"] = locationId;
       }
 
       if (Object.keys(changes).length > 0) {
@@ -512,7 +510,7 @@ const referenceInput = z.object({ reference: z.string().min(1) });
  * then mark it Done. Runs in one transaction, so a rejected line leaves the
  * document untouched rather than half applied.
  */
-export const validateOperation = createServerFn({ method: 'POST' })
+export const validateOperation = createServerFn({ method: "POST" })
   .validator((input: unknown) => referenceInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     const actor = await requireUser();
@@ -533,7 +531,7 @@ export const validateOperation = createServerFn({ method: 'POST' })
         .limit(1);
 
       if (!operation) throw new Error(`Document ${data.reference} does not exist`);
-      if (operation.status !== 'Ready') {
+      if (operation.status !== "Ready") {
         throw new Error(
           `${operation.reference} is ${operation.status}. Mark it Ready before validating.`,
         );
@@ -559,15 +557,15 @@ export const validateOperation = createServerFn({ method: 'POST' })
 
       for (const line of movable) {
         // An adjustment can go either way; its sign decides the direction.
-        const outbound = operation.kind === 'Adjustment' && line.receivedQty < 0;
-        const inbound = operation.kind === 'Adjustment' && line.receivedQty > 0;
+        const outbound = operation.kind === "Adjustment" && line.receivedQty < 0;
+        const inbound = operation.kind === "Adjustment" && line.receivedQty > 0;
 
         const fromLocationId = inbound ? operation.destLocationId : operation.sourceLocationId;
         const toLocationId = inbound ? operation.sourceLocationId : operation.destLocationId;
         const quantity = Math.abs(line.receivedQty);
 
         // Never let stock go negative at the source.
-        if (operation.kind === 'Delivery' || operation.kind === 'Internal Transfer' || outbound) {
+        if (operation.kind === "Delivery" || operation.kind === "Internal Transfer" || outbound) {
           const available = await getOnHand(tx, line.productId, fromLocationId);
           if (available < quantity) {
             throw new Error(
@@ -593,12 +591,12 @@ export const validateOperation = createServerFn({ method: 'POST' })
 
       await tx
         .update(operations)
-        .set({ status: 'Done', validatedAt: now })
+        .set({ status: "Done", validatedAt: now })
         .where(eq(operations.id, operation.id));
     });
   });
 
-const ADJUSTMENT_REASONS = ['Damaged', 'Lost', 'Found', 'Miscount', 'Other'] as const;
+const ADJUSTMENT_REASONS = ["Damaged", "Lost", "Found", "Miscount", "Other"] as const;
 
 const adjustmentInput = z.object({
   counts: z.record(z.string(), z.number()),
@@ -615,13 +613,13 @@ const adjustmentInput = z.object({
  *
  * Returns the number of lines actually adjusted.
  */
-export const applyAdjustment = createServerFn({ method: 'POST' })
+export const applyAdjustment = createServerFn({ method: "POST" })
   .validator((input: unknown) => adjustmentInput.parse(input))
   .handler(async ({ data }): Promise<number> => {
     const actor = await requireUser();
 
     return db.transaction(async (tx) => {
-      const loss = await locationIdByName(tx, 'Inventory Loss');
+      const loss = await locationIdByName(tx, "Inventory Loss");
       const entries = Object.entries(data.counts);
       if (entries.length === 0) return 0;
 
@@ -648,7 +646,7 @@ export const applyAdjustment = createServerFn({ method: 'POST' })
           undefined,
         );
 
-        const locationId = primary?.locationId ?? (await locationIdByName(tx, 'Main / Stock'));
+        const locationId = primary?.locationId ?? (await locationIdByName(tx, "Main / Stock"));
         const current = quants.reduce((total, quant) => total + quant.quantity, 0);
         const difference = counted - current;
 
@@ -657,14 +655,14 @@ export const applyAdjustment = createServerFn({ method: 'POST' })
             productId,
             locationId,
             difference,
-            reason: data.reasons?.[productId] ?? 'Miscount',
+            reason: data.reasons?.[productId] ?? "Miscount",
           });
         }
       }
 
       if (changes.length === 0) return 0;
 
-      const reference = await nextReference(tx, 'Adjustment');
+      const reference = await nextReference(tx, "Adjustment");
       const now = new Date();
       const anchor = changes[0];
       if (!anchor) return 0;
@@ -673,9 +671,9 @@ export const applyAdjustment = createServerFn({ method: 'POST' })
         .insert(operations)
         .values({
           reference,
-          kind: 'Adjustment',
-          status: 'Done',
-          partner: data.note ?? 'Cycle count',
+          kind: "Adjustment",
+          status: "Done",
+          partner: data.note ?? "Cycle count",
           scheduledDate: now.toISOString().slice(0, 10),
           sourceLocationId: anchor.locationId,
           destLocationId: loss,
@@ -683,7 +681,7 @@ export const applyAdjustment = createServerFn({ method: 'POST' })
         })
         .returning({ id: operations.id });
 
-      if (!created) throw new Error('Could not create the adjustment document');
+      if (!created) throw new Error("Could not create the adjustment document");
 
       let sortOrder = 0;
       for (const change of changes) {
@@ -704,7 +702,7 @@ export const applyAdjustment = createServerFn({ method: 'POST' })
           fromLocationId: increasing ? loss : change.locationId,
           toLocationId: increasing ? change.locationId : loss,
           quantity: Math.abs(change.difference),
-          kind: 'Adjustment',
+          kind: "Adjustment",
           doneById: actor.id,
           doneAt: now,
         });
@@ -719,10 +717,10 @@ export const applyAdjustment = createServerFn({ method: 'POST' })
 // ---------------------------------------------------------------------------
 
 const createProductInput = z.object({
-  name: z.string().trim().min(1, 'Enter a product name'),
-  sku: z.string().trim().min(1, 'Enter a SKU'),
-  category: z.string().trim().min(1, 'Choose a category'),
-  unit: z.string().trim().min(1, 'Enter a unit of measure'),
+  name: z.string().trim().min(1, "Enter a product name"),
+  sku: z.string().trim().min(1, "Enter a SKU"),
+  category: z.string().trim().min(1, "Choose a category"),
+  unit: z.string().trim().min(1, "Enter a unit of measure"),
   /** Optional opening stock, recorded as a real receipt so the ledger matches. */
   initialStock: z.number().min(0).optional(),
   location: z.string().trim().optional(),
@@ -730,7 +728,7 @@ const createProductInput = z.object({
   maxQty: z.number().min(0).optional(),
 });
 
-export const createProduct = createServerFn({ method: 'POST' })
+export const createProduct = createServerFn({ method: "POST" })
   .validator((input: unknown) => createProductInput.parse(input))
   .handler(async ({ data }): Promise<string> => {
     const actor = await requireManager();
@@ -764,7 +762,7 @@ export const createProduct = createServerFn({ method: 'POST' })
         })
         .returning({ id: products.id });
 
-      if (!created) throw new Error('Could not create the product.');
+      if (!created) throw new Error("Could not create the product.");
 
       const locationId = data.location
         ? await locationIdByName(tx, data.location)
@@ -790,17 +788,17 @@ export const createProduct = createServerFn({ method: 'POST' })
       }
 
       if (data.initialStock !== undefined && data.initialStock > 0) {
-        const reference = await nextReference(tx, 'Receipt');
-        const vendors = await locationIdByName(tx, 'Vendors');
+        const reference = await nextReference(tx, "Receipt");
+        const vendors = await locationIdByName(tx, "Vendors");
         const now = new Date();
 
         const [operation] = await tx
           .insert(operations)
           .values({
             reference,
-            kind: 'Receipt',
-            status: 'Done',
-            partner: 'Opening stock',
+            kind: "Receipt",
+            status: "Done",
+            partner: "Opening stock",
             scheduledDate: now.toISOString().slice(0, 10),
             sourceLocationId: vendors,
             destLocationId: locationId,
@@ -825,7 +823,7 @@ export const createProduct = createServerFn({ method: 'POST' })
             fromLocationId: vendors,
             toLocationId: locationId,
             quantity: data.initialStock,
-            kind: 'Receipt',
+            kind: "Receipt",
             doneById: actor.id,
             doneAt: now,
           });
@@ -836,9 +834,9 @@ export const createProduct = createServerFn({ method: 'POST' })
     });
   });
 
-const nameInput = z.object({ name: z.string().trim().min(1, 'Enter a name') });
+const nameInput = z.object({ name: z.string().trim().min(1, "Enter a name") });
 
-export const createCategory = createServerFn({ method: 'POST' })
+export const createCategory = createServerFn({ method: "POST" })
   .validator((input: unknown) => nameInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     await requireManager();
@@ -862,13 +860,13 @@ const ruleInput = z.object({
 });
 
 /** Creates or updates the rule for a product at whichever warehouse holds it. */
-export const saveReorderingRule = createServerFn({ method: 'POST' })
+export const saveReorderingRule = createServerFn({ method: "POST" })
   .validator((input: unknown) => ruleInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     await requireManager();
 
     if (data.maxQty > 0 && data.maxQty < data.minQty) {
-      throw new Error('Maximum must be greater than or equal to minimum.');
+      throw new Error("Maximum must be greater than or equal to minimum.");
     }
 
     await db.transaction(async (tx) => {
@@ -893,7 +891,7 @@ export const saveReorderingRule = createServerFn({ method: 'POST' })
         .where(eq(locations.id, locationId))
         .limit(1);
 
-      if (!row?.warehouseId) throw new Error('No warehouse exists to attach the rule to.');
+      if (!row?.warehouseId) throw new Error("No warehouse exists to attach the rule to.");
 
       await tx.insert(reorderingRules).values({
         productId: data.productId,
@@ -905,12 +903,12 @@ export const saveReorderingRule = createServerFn({ method: 'POST' })
   });
 
 const warehouseInput = z.object({
-  name: z.string().trim().min(1, 'Enter a warehouse name'),
-  code: z.string().trim().min(1, 'Enter a short code').max(8),
+  name: z.string().trim().min(1, "Enter a warehouse name"),
+  code: z.string().trim().min(1, "Enter a short code").max(8),
   address: z.string().trim().optional(),
 });
 
-export const createWarehouse = createServerFn({ method: 'POST' })
+export const createWarehouse = createServerFn({ method: "POST" })
   .validator((input: unknown) => warehouseInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     await requireManager();
@@ -934,24 +932,24 @@ export const createWarehouse = createServerFn({ method: 'POST' })
         })
         .returning({ id: warehouses.id });
 
-      if (!created) throw new Error('Could not create the warehouse.');
+      if (!created) throw new Error("Could not create the warehouse.");
 
       // A warehouse with no location cannot receive stock, so give it one.
       await tx.insert(locations).values({
         warehouseId: created.id,
-        name: 'Stock',
+        name: "Stock",
         fullName: `${data.name.trim()} / Stock`,
-        kind: 'Internal',
+        kind: "Internal",
       });
     });
   });
 
 const locationInput = z.object({
   warehouseCode: z.string().trim().min(1),
-  name: z.string().trim().min(1, 'Enter a location name'),
+  name: z.string().trim().min(1, "Enter a location name"),
 });
 
-export const createLocation = createServerFn({ method: 'POST' })
+export const createLocation = createServerFn({ method: "POST" })
   .validator((input: unknown) => locationInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     await requireManager();
@@ -962,7 +960,7 @@ export const createLocation = createServerFn({ method: 'POST' })
       .where(eq(warehouses.code, data.warehouseCode.toUpperCase()))
       .limit(1);
 
-    if (!warehouse) throw new Error('That warehouse does not exist.');
+    if (!warehouse) throw new Error("That warehouse does not exist.");
 
     const name = data.name.trim();
     const fullName = `${warehouse.name} / ${name}`;
@@ -979,6 +977,6 @@ export const createLocation = createServerFn({ method: 'POST' })
       warehouseId: warehouse.id,
       name,
       fullName,
-      kind: 'Internal',
+      kind: "Internal",
     });
   });

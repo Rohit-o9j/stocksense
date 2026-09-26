@@ -26,11 +26,11 @@ import {
   useRef,
   useState,
   type ReactNode,
-} from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+} from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { useAuth } from './auth';
+import { useAuth } from "./auth";
 
 import {
   applyAdjustment as applyAdjustmentFn,
@@ -46,11 +46,11 @@ import {
   type LocationDto,
   type QuantDto,
   type WarehouseDto,
-} from '@/lib/stock-api';
+} from "@/lib/stock-api";
 
 export type { LocationDto, QuantDto, WarehouseDto };
 
-export type AdjustmentReason = 'Damaged' | 'Lost' | 'Found' | 'Miscount' | 'Other';
+export type AdjustmentReason = "Damaged" | "Lost" | "Found" | "Miscount" | "Other";
 
 export type NewProductInput = {
   name: string;
@@ -63,10 +63,10 @@ export type NewProductInput = {
   maxQty?: number;
 };
 
-export type Status = 'Draft' | 'Waiting' | 'Ready' | 'Done' | 'Canceled';
-export type Kind = 'Receipt' | 'Delivery' | 'Internal Transfer' | 'Adjustment';
+export type Status = "Draft" | "Waiting" | "Ready" | "Done" | "Canceled";
+export type Kind = "Receipt" | "Delivery" | "Internal Transfer" | "Adjustment";
 /** Mirrors the database enum. Admin inherits every Inventory Manager right. */
-export type Role = 'Warehouse Staff' | 'Inventory Manager' | 'Admin';
+export type Role = "Warehouse Staff" | "Inventory Manager" | "Admin";
 
 export type Product = {
   id: string;
@@ -134,7 +134,7 @@ type Store = {
   createLocation: (warehouseCode: string, name: string) => Promise<void>;
 };
 
-const SNAPSHOT_KEY = ['stock', 'snapshot'] as const;
+const SNAPSHOT_KEY = ["stock", "snapshot"] as const;
 
 /** How long to wait after the last keystroke before persisting a document edit. */
 const WRITE_DELAY_MS = 400;
@@ -154,13 +154,13 @@ function toWirePatch(patch: Partial<Operation>) {
 }
 
 function describe(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong';
+  return error instanceof Error ? error.message : "Something went wrong";
 }
 
 export function StockProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const role: Role = user?.role ?? 'Warehouse Staff';
+  const role: Role = user?.role ?? "Warehouse Staff";
 
   const query = useQuery({
     queryKey: SNAPSHOT_KEY,
@@ -305,13 +305,18 @@ export function StockProvider({ children }: { children: ReactNode }) {
   );
 
   const operations = useMemo(() => {
+    // The pending edits live in a ref so the debounce callback always reads the
+    // newest value; `revision` is the signal that the ref changed and this
+    // overlay needs recomputing. Referenced explicitly so it is a real
+    // dependency rather than one the linter considers unused.
+    void revision;
+
     const rows = query.data?.operations ?? [];
     if (pending.current.size === 0) return rows;
     return rows.map((operation) => {
       const patch = pending.current.get(operation.id);
       return patch ? { ...operation, ...patch } : operation;
     });
-    // `revision` is what tells us the pending map changed.
   }, [query.data, revision]);
 
   const value = useMemo<Store>(
@@ -358,6 +363,6 @@ export function StockProvider({ children }: { children: ReactNode }) {
 
 export const useStock = () => {
   const context = useContext(StockContext);
-  if (!context) throw new Error('StockProvider missing');
+  if (!context) throw new Error("StockProvider missing");
   return context;
 };

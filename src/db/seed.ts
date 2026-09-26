@@ -6,7 +6,7 @@
  *   bun run db:seed -- --demo    reference data plus the demo inventory
  *   bun run db:seed -- --reset   clear inventory first (never touches user accounts)
  */
-import { db, pool } from './index';
+import { db, pool } from "./index";
 import {
   DEMO_USERS,
   DEV_PASSWORD,
@@ -15,16 +15,16 @@ import {
   resetInventory,
   seedBaseline,
   seedDemo,
-} from './demo-data';
+} from "./demo-data";
 
 async function main(): Promise<void> {
   const args = new Set(process.argv.slice(2));
-  const withDemo = args.has('--demo');
-  const withReset = args.has('--reset');
+  const withDemo = args.has("--demo");
+  const withReset = args.has("--reset");
 
   await db.transaction(async (tx) => {
     if (withReset) {
-      console.log('Clearing inventory (user accounts are left alone)...');
+      console.log("Clearing inventory (user accounts are left alone)...");
       await resetInventory(tx);
     }
 
@@ -46,11 +46,11 @@ async function main(): Promise<void> {
   const counts = await countRows(db);
   const integrity = await checkIntegrity(db);
 
-  console.log('');
+  console.log("");
   console.log(
     Object.entries(counts)
       .map(([table, n]) => `${table}=${n}`)
-      .join(' '),
+      .join(" "),
   );
   console.log(
     integrity.issues.length === 0
@@ -61,9 +61,10 @@ async function main(): Promise<void> {
     console.log(`  ${issue.sku}: quants=${issue.quants} ledger=${issue.ledger}`);
   }
 
-  console.log('');
-  console.log('Demo logins (development only):');
-  for (const user of DEMO_USERS) console.log(`  ${user.email}  /  ${DEV_PASSWORD}   (${user.role})`);
+  console.log("");
+  console.log("Demo logins (development only):");
+  for (const user of DEMO_USERS)
+    console.log(`  ${user.email}  /  ${DEV_PASSWORD}   (${user.role})`);
 
   await pool.end();
 }

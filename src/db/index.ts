@@ -10,23 +10,23 @@
  * because validating a stock operation has to write moves and update quants
  * atomically, and `drizzle-orm/neon-http` has no transaction support at all.
  */
-import { Pool } from '@neondatabase/serverless';
-import { drizzle, type NeonDatabase } from 'drizzle-orm/neon-serverless';
+import { Pool } from "@neondatabase/serverless";
+import { drizzle, type NeonDatabase } from "drizzle-orm/neon-serverless";
 
-import * as schema from './schema';
+import * as schema from "./schema";
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   throw new Error(
-    'src/db was imported in the browser. Database access belongs in a server function ' +
-      '(createServerFn) or a route loader, never in client components.',
+    "src/db was imported in the browser. Database access belongs in a server function " +
+      "(createServerFn) or a route loader, never in client components.",
   );
 }
 
-const connectionString = process.env['DATABASE_URL'];
+const connectionString = process.env["DATABASE_URL"];
 
 if (!connectionString) {
   throw new Error(
-    'DATABASE_URL is not set. Copy .env.example to .env and paste your Neon connection string.',
+    "DATABASE_URL is not set. Copy .env.example to .env and paste your Neon connection string.",
   );
 }
 
@@ -42,6 +42,6 @@ export type Database = NeonDatabase<typeof schema>;
  * Either the root client or an open transaction. Helpers that must be callable
  * both standalone and inside `db.transaction()` take this.
  */
-export type Executor = Database | Parameters<Parameters<Database['transaction']>[0]>[0];
+export type Executor = Database | Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 export { schema };

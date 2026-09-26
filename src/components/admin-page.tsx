@@ -7,8 +7,8 @@
  *   3. People   — who has access, at what level
  *   4. Runtime  — environment facts worth knowing before a demo or deploy
  */
-import { useCallback, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
   AlertTriangle,
@@ -20,13 +20,13 @@ import {
   ShieldAlert,
   Trash2,
   Users,
-} from 'lucide-react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { PageTitle } from '@/components/stock-shell';
-import { useAuth } from '@/lib/auth';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PageTitle } from "@/components/stock-shell";
+import { useAuth } from "@/lib/auth";
 import {
   deleteUser as deleteUserFn,
   getAdminOverview,
@@ -35,29 +35,29 @@ import {
   seedReferenceData,
   setUserRole as setUserRoleFn,
   type AdminOverview,
-} from '@/lib/admin-api';
+} from "@/lib/admin-api";
 
-const ROLES = ['Warehouse Staff', 'Inventory Manager', 'Admin'] as const;
+const ROLES = ["Warehouse Staff", "Inventory Manager", "Admin"] as const;
 type Role = (typeof ROLES)[number];
 
-const ADMIN_KEY = ['admin', 'overview'] as const;
+const ADMIN_KEY = ["admin", "overview"] as const;
 
 const COUNT_LABELS: Record<string, string> = {
-  users: 'Users',
-  categories: 'Categories',
-  warehouses: 'Warehouses',
-  locations: 'Locations',
-  products: 'Products',
-  reorderingRules: 'Reorder rules',
-  operations: 'Documents',
-  operationLines: 'Document lines',
-  stockMoves: 'Ledger entries',
-  stockQuants: 'Stock records',
+  users: "Users",
+  categories: "Categories",
+  warehouses: "Warehouses",
+  locations: "Locations",
+  products: "Products",
+  reorderingRules: "Reorder rules",
+  operations: "Documents",
+  operationLines: "Document lines",
+  stockMoves: "Ledger entries",
+  stockQuants: "Stock records",
 };
 
 function Panel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <section className={`rounded-lg border border-border bg-card ${className ?? ''}`}>
+    <section className={`rounded-lg border border-border bg-card ${className ?? ""}`}>
       {children}
     </section>
   );
@@ -90,10 +90,10 @@ function PanelHead({
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string | number; tone?: 'warn' }) {
+function Stat({ label, value, tone }: { label: string; value: string | number; tone?: "warn" }) {
   return (
     <div
-      className={`rounded-lg border bg-card p-4 ${tone === 'warn' ? 'border-warning/40' : 'border-border'}`}
+      className={`rounded-lg border bg-card p-4 ${tone === "warn" ? "border-warning/40" : "border-border"}`}
     >
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <strong className="mt-3 block text-2xl font-semibold tabular-nums">{value}</strong>
@@ -104,20 +104,20 @@ function Stat({ label, value, tone }: { label: string; value: string | number; t
 export function AdminPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [busy, setBusy] = useState('');
-  const [confirmation, setConfirmation] = useState('');
+  const [busy, setBusy] = useState("");
+  const [confirmation, setConfirmation] = useState("");
 
   const query = useQuery({
     queryKey: ADMIN_KEY,
     queryFn: () => getAdminOverview(),
     retry: false,
-    enabled: user?.role === 'Admin',
+    enabled: user?.role === "Admin",
   });
 
   const refresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ADMIN_KEY });
     // Inventory screens read a different cache; keep them honest too.
-    await queryClient.invalidateQueries({ queryKey: ['stock'] });
+    await queryClient.invalidateQueries({ queryKey: ["stock"] });
   }, [queryClient]);
 
   const run = useCallback(
@@ -126,17 +126,17 @@ export function AdminPage() {
       try {
         const message = await action();
         await refresh();
-        toast.success(typeof message === 'string' && message ? message : 'Done');
+        toast.success(typeof message === "string" && message ? message : "Done");
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'That action failed');
+        toast.error(error instanceof Error ? error.message : "That action failed");
       } finally {
-        setBusy('');
+        setBusy("");
       }
     },
     [refresh],
   );
 
-  if (user && user.role !== 'Admin') {
+  if (user && user.role !== "Admin") {
     return (
       <div className="mx-auto max-w-md py-20 text-center">
         <ShieldAlert className="mx-auto size-8 text-muted-foreground" />
@@ -158,7 +158,7 @@ export function AdminPage() {
         <AlertTriangle className="mx-auto size-8 text-danger" />
         <h1 className="mt-4 text-lg font-semibold">Could not load admin data</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {query.error instanceof Error ? query.error.message : 'Unknown error'}
+          {query.error instanceof Error ? query.error.message : "Unknown error"}
         </p>
       </div>
     );
@@ -166,8 +166,7 @@ export function AdminPage() {
 
   const data: AdminOverview = query.data;
   const healthy = data.integrity.issues.length === 0;
-  const operable =
-    data.missingVirtualLocations.length === 0 && (data.counts['locations'] ?? 0) > 0;
+  const operable = data.missingVirtualLocations.length === 0 && (data.counts["locations"] ?? 0) > 0;
 
   return (
     <>
@@ -182,10 +181,10 @@ export function AdminPage() {
       />
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Users" value={data.counts['users'] ?? 0} />
-        <Stat label="Products" value={data.counts['products'] ?? 0} />
-        <Stat label="Documents" value={data.counts['operations'] ?? 0} />
-        <Stat label="Ledger entries" value={data.counts['stockMoves'] ?? 0} />
+        <Stat label="Users" value={data.counts["users"] ?? 0} />
+        <Stat label="Products" value={data.counts["products"] ?? 0} />
+        <Stat label="Documents" value={data.counts["operations"] ?? 0} />
+        <Stat label="Ledger entries" value={data.counts["stockMoves"] ?? 0} />
       </div>
 
       {/* 1 — Health ------------------------------------------------------- */}
@@ -199,8 +198,8 @@ export function AdminPage() {
           <div
             className={`flex items-start gap-3 rounded-md border p-3 text-sm ${
               healthy
-                ? 'border-success/30 bg-success-subtle text-success'
-                : 'border-danger/30 bg-danger-subtle text-danger'
+                ? "border-success/30 bg-success-subtle text-success"
+                : "border-danger/30 bg-danger-subtle text-danger"
             }`}
           >
             {healthy ? (
@@ -233,8 +232,8 @@ export function AdminPage() {
                 <p className="font-medium">Stock operations are not possible yet.</p>
                 <p className="mt-1 text-xs">
                   {data.missingVirtualLocations.length > 0
-                    ? `Missing required locations: ${data.missingVirtualLocations.join(', ')}.`
-                    : 'No storage locations exist.'}{' '}
+                    ? `Missing required locations: ${data.missingVirtualLocations.join(", ")}.`
+                    : "No storage locations exist."}{" "}
                   Load the reference data below.
                 </p>
               </div>
@@ -270,10 +269,10 @@ export function AdminPage() {
             </div>
             <Button
               variant="outline"
-              disabled={busy !== ''}
-              onClick={() => void run('baseline', () => seedReferenceData())}
+              disabled={busy !== ""}
+              onClick={() => void run("baseline", () => seedReferenceData())}
             >
-              {busy === 'baseline' && <Loader2 className="size-4 animate-spin" />}
+              {busy === "baseline" && <Loader2 className="size-4 animate-spin" />}
               Load reference data
             </Button>
           </div>
@@ -288,10 +287,10 @@ export function AdminPage() {
               </p>
             </div>
             <Button
-              disabled={busy !== ''}
-              onClick={() => void run('demo', () => seedDemoInventory())}
+              disabled={busy !== ""}
+              onClick={() => void run("demo", () => seedDemoInventory())}
             >
-              {busy === 'demo' && <Loader2 className="size-4 animate-spin" />}
+              {busy === "demo" && <Loader2 className="size-4 animate-spin" />}
               Load demo inventory
             </Button>
           </div>
@@ -319,17 +318,17 @@ export function AdminPage() {
                 />
                 <Button
                   variant="destructive"
-                  disabled={busy !== '' || confirmation !== 'RESET'}
-                  title={confirmation !== 'RESET' ? 'Type RESET to enable' : undefined}
+                  disabled={busy !== "" || confirmation !== "RESET"}
+                  title={confirmation !== "RESET" ? "Type RESET to enable" : undefined}
                   onClick={() =>
-                    void run('reset', async () => {
+                    void run("reset", async () => {
                       const message = await resetInventoryFn({ data: { confirmation } });
-                      setConfirmation('');
+                      setConfirmation("");
                       return message;
                     })
                   }
                 >
-                  {busy === 'reset' && <Loader2 className="size-4 animate-spin" />}
+                  {busy === "reset" && <Loader2 className="size-4 animate-spin" />}
                   <Trash2 /> Reset
                 </Button>
               </div>
@@ -396,8 +395,8 @@ export function AdminPage() {
                         id={`role-${row.id}`}
                         className="h-9 rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
                         value={row.role}
-                        disabled={isSelf || busy !== ''}
-                        title={isSelf ? 'You cannot change your own role' : undefined}
+                        disabled={isSelf || busy !== ""}
+                        title={isSelf ? "You cannot change your own role" : undefined}
                         onChange={(event) =>
                           void run(`role-${row.id}`, () =>
                             setUserRoleFn({
@@ -414,11 +413,11 @@ export function AdminPage() {
                       </select>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span title={isSelf ? 'You cannot delete your own account' : undefined}>
+                      <span title={isSelf ? "You cannot delete your own account" : undefined}>
                         <Button
                           variant="ghost"
                           size="sm"
-                          disabled={isSelf || busy !== ''}
+                          disabled={isSelf || busy !== ""}
                           onClick={() =>
                             void run(`delete-${row.id}`, () =>
                               deleteUserFn({ data: { userId: row.id } }),

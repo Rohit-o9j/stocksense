@@ -14,7 +14,7 @@ const KEY_BYTES = 32;
 const SALT_BYTES = 16;
 
 function toBase64(bytes: Uint8Array): string {
-  let binary = '';
+  let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary);
 }
@@ -34,15 +34,15 @@ async function derive(
   iterations: number,
 ): Promise<Uint8Array<ArrayBuffer>> {
   const key = await crypto.subtle.importKey(
-    'raw',
+    "raw",
     new TextEncoder().encode(password),
-    'PBKDF2',
+    "PBKDF2",
     false,
-    ['deriveBits'],
+    ["deriveBits"],
   );
 
   const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
     key,
     KEY_BYTES * 8,
   );
@@ -67,12 +67,12 @@ function equalBytes(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  const parts = stored.split('$');
+  const parts = stored.split("$");
   const [scheme, iterationsRaw, saltRaw, hashRaw] = parts;
 
   if (
     parts.length !== 4 ||
-    scheme !== 'pbkdf2' ||
+    scheme !== "pbkdf2" ||
     iterationsRaw === undefined ||
     saltRaw === undefined ||
     hashRaw === undefined

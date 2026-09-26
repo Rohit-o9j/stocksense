@@ -88,10 +88,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "StockSense · Inventory management" },
-      { name: "description", content: "Inventory operations, products, stock counts and movement history in one workspace." },
+      {
+        name: "description",
+        content:
+          "Inventory operations, products, stock counts and movement history in one workspace.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "StockSense · Inventory management" },
-      { property: "og:description", content: "Inventory operations, products, stock counts and movement history in one workspace." },
+      {
+        property: "og:description",
+        content:
+          "Inventory operations, products, stock counts and movement history in one workspace.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -100,10 +108,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-     { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -138,23 +149,23 @@ function RootShell({ children }: { children: ReactNode }) {
  * footer, so putting it inside StockShell would give it two sets of chrome. It
  * also needs no session — its own call to action is what leads into the app.
  */
-const STANDALONE_ROUTES = new Set(['/auth', '/about']);
-const PUBLIC_ROUTES = new Set(['/auth', '/about']);
+const STANDALONE_ROUTES = new Set(["/auth", "/about"]);
+const PUBLIC_ROUTES = new Set(["/auth", "/about"]);
 
 function SessionGate() {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-  const isAuthRoute = pathname === '/auth';
+  const isAuthRoute = pathname === "/auth";
   const isPublic = PUBLIC_ROUTES.has(pathname);
   const isStandalone = STANDALONE_ROUTES.has(pathname);
 
   useEffect(() => {
     if (isLoading) return;
-    if (!user && !isPublic) void navigate({ to: '/auth', replace: true });
+    if (!user && !isPublic) void navigate({ to: "/auth", replace: true });
     // Only bounce off the sign-in screen; a signed-in user may still read /about.
-    if (user && isAuthRoute) void navigate({ to: '/', replace: true });
+    if (user && isAuthRoute) void navigate({ to: "/", replace: true });
   }, [user, isLoading, isAuthRoute, isPublic, navigate]);
 
   // Public standalone pages render immediately — no need to wait on the session.
@@ -184,7 +195,9 @@ function SessionGate() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const isStandalone = useRouterState({ select: (state) => ['/auth', '/about'].includes(state.location.pathname) });
+  const isStandalone = useRouterState({
+    select: (state) => ["/auth", "/about"].includes(state.location.pathname),
+  });
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

@@ -28,56 +28,56 @@ import {
   uniqueIndex,
   uuid,
   type AnyPgColumn,
-} from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 /**
  * Quantities are exact decimals, never floats — inventory arithmetic must not
  * drift. `mode: 'number'` keeps them as plain numbers in TypeScript while
  * Postgres stores them as NUMERIC(14,3), enough for fractional kg / L / m.
  */
-const quantity = (name: string) => numeric(name, { precision: 14, scale: 3, mode: 'number' });
+const quantity = (name: string) => numeric(name, { precision: 14, scale: 3, mode: "number" });
 
 // ---------------------------------------------------------------------------
 // Enums — values match the unions in src/lib/stock.tsx exactly
 // ---------------------------------------------------------------------------
 
 /** Shared document workflow: Draft -> Waiting -> Ready -> Done, Canceled from any state. */
-export const statusEnum = pgEnum('status', ['Draft', 'Waiting', 'Ready', 'Done', 'Canceled']);
+export const statusEnum = pgEnum("status", ["Draft", "Waiting", "Ready", "Done", "Canceled"]);
 
 /** The four operation types, all of which are moves between two locations. */
-export const kindEnum = pgEnum('operation_kind', [
-  'Receipt',
-  'Delivery',
-  'Internal Transfer',
-  'Adjustment',
+export const kindEnum = pgEnum("operation_kind", [
+  "Receipt",
+  "Delivery",
+  "Internal Transfer",
+  "Adjustment",
 ]);
 
 /**
  * Access levels, least to most privileged. Admin inherits everything an
  * Inventory Manager can do, plus user management and demo data control.
  */
-export const roleEnum = pgEnum('user_role', ['Warehouse Staff', 'Inventory Manager', 'Admin']);
+export const roleEnum = pgEnum("user_role", ["Warehouse Staff", "Inventory Manager", "Admin"]);
 
 /**
  * Internal locations hold real stock. Vendor / Customer / Inventory Loss are
  * virtual: they are the counterparty of a move, so receipts, deliveries and
  * adjustments all reduce to the same source -> destination shape.
  */
-export const locationKindEnum = pgEnum('location_kind', [
-  'Internal',
-  'Vendor',
-  'Customer',
-  'Inventory Loss',
+export const locationKindEnum = pgEnum("location_kind", [
+  "Internal",
+  "Vendor",
+  "Customer",
+  "Inventory Loss",
 ]);
 
 /** Reason recorded against an inventory adjustment line. */
-export const adjustmentReasonEnum = pgEnum('adjustment_reason', [
-  'Damaged',
-  'Lost',
-  'Found',
-  'Miscount',
-  'Other',
+export const adjustmentReasonEnum = pgEnum("adjustment_reason", [
+  "Damaged",
+  "Lost",
+  "Found",
+  "Miscount",
+  "Other",
 ]);
 
 // ---------------------------------------------------------------------------
@@ -85,18 +85,18 @@ export const adjustmentReasonEnum = pgEnum('adjustment_reason', [
 // ---------------------------------------------------------------------------
 
 export const users = pgTable(
-  'users',
+  "users",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    name: text('name').notNull(),
-    email: text('email').notNull(),
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
     /** bcrypt/argon2 digest — never a plaintext password. */
-    passwordHash: text('password_hash').notNull(),
-    role: roleEnum('role').notNull().default('Warehouse Staff'),
-    lowStockAlerts: boolean('low_stock_alerts').notNull().default(true),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    passwordHash: text("password_hash").notNull(),
+    role: roleEnum("role").notNull().default("Warehouse Staff"),
+    lowStockAlerts: boolean("low_stock_alerts").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex('users_email_key').on(table.email)],
+  (table) => [uniqueIndex("users_email_key").on(table.email)],
 );
 
 /**
@@ -104,19 +104,19 @@ export const users = pgTable(
  * quickly, and carries an attempt counter so it cannot be brute forced.
  */
 export const passwordResetOtps = pgTable(
-  'password_reset_otps',
+  "password_reset_otps",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id')
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    codeHash: text('code_hash').notNull(),
-    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-    consumedAt: timestamp('consumed_at', { withTimezone: true }),
-    attempts: integer('attempts').notNull().default(0),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+      .references(() => users.id, { onDelete: "cascade" }),
+    codeHash: text("code_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    attempts: integer("attempts").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index('password_reset_otps_user_idx').on(table.userId, table.expiresAt)],
+  (table) => [index("password_reset_otps_user_idx").on(table.userId, table.expiresAt)],
 );
 
 // ---------------------------------------------------------------------------
@@ -124,82 +124,84 @@ export const passwordResetOtps = pgTable(
 // ---------------------------------------------------------------------------
 
 export const categories = pgTable(
-  'categories',
+  "categories",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    name: text('name').notNull(),
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
   },
-  (table) => [uniqueIndex('categories_name_key').on(table.name)],
+  (table) => [uniqueIndex("categories_name_key").on(table.name)],
 );
 
 export const warehouses = pgTable(
-  'warehouses',
+  "warehouses",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    name: text('name').notNull(),
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
     /** Short prefix used in document references, e.g. 'WH' in WH/IN/00001. */
-    code: text('code').notNull(),
-    address: text('address'),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    code: text("code").notNull(),
+    address: text("address"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex('warehouses_code_key').on(table.code)],
+  (table) => [uniqueIndex("warehouses_code_key").on(table.code)],
 );
 
 export const locations = pgTable(
-  'locations',
+  "locations",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid("id").primaryKey().defaultRandom(),
     /** Null for virtual locations, which belong to no warehouse. */
-    warehouseId: uuid('warehouse_id').references(() => warehouses.id, { onDelete: 'cascade' }),
-    name: text('name').notNull(),
+    warehouseId: uuid("warehouse_id").references(() => warehouses.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
     /** Display path such as 'Main / Stock' — matches the prototype's strings. */
-    fullName: text('full_name').notNull(),
-    kind: locationKindEnum('kind').notNull().default('Internal'),
-    parentId: uuid('parent_id').references((): AnyPgColumn => locations.id, {
-      onDelete: 'set null',
+    fullName: text("full_name").notNull(),
+    kind: locationKindEnum("kind").notNull().default("Internal"),
+    parentId: uuid("parent_id").references((): AnyPgColumn => locations.id, {
+      onDelete: "set null",
     }),
-    active: boolean('active').notNull().default(true),
+    active: boolean("active").notNull().default(true),
   },
   (table) => [
-    uniqueIndex('locations_full_name_key').on(table.fullName),
-    index('locations_warehouse_idx').on(table.warehouseId),
+    uniqueIndex("locations_full_name_key").on(table.fullName),
+    index("locations_warehouse_idx").on(table.warehouseId),
   ],
 );
 
 export const products = pgTable(
-  'products',
+  "products",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    name: text('name').notNull(),
-    sku: text('sku').notNull(),
-    categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    sku: text("sku").notNull(),
+    categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
     /** Unit of measure: kg, units, sheets, L, m, rolls, pairs, boxes. */
-    unit: text('unit').notNull().default('units'),
-    active: boolean('active').notNull().default(true),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    unit: text("unit").notNull().default("units"),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('products_sku_key').on(table.sku),
-    index('products_category_idx').on(table.categoryId),
-    index('products_name_idx').on(table.name),
+    uniqueIndex("products_sku_key").on(table.sku),
+    index("products_category_idx").on(table.categoryId),
+    index("products_name_idx").on(table.name),
   ],
 );
 
 /** Min/max levels driving low-stock alerts and suggested reorder quantities. */
 export const reorderingRules = pgTable(
-  'reordering_rules',
+  "reordering_rules",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    productId: uuid('product_id')
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
       .notNull()
-      .references(() => products.id, { onDelete: 'cascade' }),
-    warehouseId: uuid('warehouse_id')
+      .references(() => products.id, { onDelete: "cascade" }),
+    warehouseId: uuid("warehouse_id")
       .notNull()
-      .references(() => warehouses.id, { onDelete: 'cascade' }),
-    minQty: quantity('min_qty').notNull().default(0),
-    maxQty: quantity('max_qty').notNull().default(0),
+      .references(() => warehouses.id, { onDelete: "cascade" }),
+    minQty: quantity("min_qty").notNull().default(0),
+    maxQty: quantity("max_qty").notNull().default(0),
   },
-  (table) => [uniqueIndex('reordering_rules_product_warehouse_key').on(table.productId, table.warehouseId)],
+  (table) => [
+    uniqueIndex("reordering_rules_product_warehouse_key").on(table.productId, table.warehouseId),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -212,22 +214,22 @@ export const reorderingRules = pgTable(
  * Done, so quantities can never disagree with the ledger.
  */
 export const stockQuants = pgTable(
-  'stock_quants',
+  "stock_quants",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    productId: uuid('product_id')
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
       .notNull()
-      .references(() => products.id, { onDelete: 'cascade' }),
-    locationId: uuid('location_id')
+      .references(() => products.id, { onDelete: "cascade" }),
+    locationId: uuid("location_id")
       .notNull()
-      .references(() => locations.id, { onDelete: 'cascade' }),
-    quantity: quantity('quantity').notNull().default(0),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+      .references(() => locations.id, { onDelete: "cascade" }),
+    quantity: quantity("quantity").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('stock_quants_product_location_key').on(table.productId, table.locationId),
-    index('stock_quants_product_idx').on(table.productId),
-    index('stock_quants_location_idx').on(table.locationId),
+    uniqueIndex("stock_quants_product_location_key").on(table.productId, table.locationId),
+    index("stock_quants_product_idx").on(table.productId),
+    index("stock_quants_location_idx").on(table.locationId),
   ],
 );
 
@@ -241,55 +243,55 @@ export const stockQuants = pgTable(
  * semantics (vendor -> stock, stock -> customer, stock -> stock, loss <-> stock).
  */
 export const operations = pgTable(
-  'operations',
+  "operations",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid("id").primaryKey().defaultRandom(),
     /** Human reference: WH/IN/00001, WH/OUT/00001, WH/INT/00001, WH/ADJ/00001. */
-    reference: text('reference').notNull(),
-    kind: kindEnum('kind').notNull(),
-    status: statusEnum('status').notNull().default('Draft'),
+    reference: text("reference").notNull(),
+    kind: kindEnum("kind").notNull(),
+    status: statusEnum("status").notNull().default("Draft"),
     /** Supplier, customer, destination rack, or adjustment reason. */
-    partner: text('partner'),
-    scheduledDate: date('scheduled_date'),
-    sourceLocationId: uuid('source_location_id').references(() => locations.id, {
-      onDelete: 'restrict',
+    partner: text("partner"),
+    scheduledDate: date("scheduled_date"),
+    sourceLocationId: uuid("source_location_id").references(() => locations.id, {
+      onDelete: "restrict",
     }),
-    destLocationId: uuid('dest_location_id').references(() => locations.id, {
-      onDelete: 'restrict',
+    destLocationId: uuid("dest_location_id").references(() => locations.id, {
+      onDelete: "restrict",
     }),
     /** Originating document, e.g. PO-2026-111 or SO-120. */
-    sourceDocument: text('source_document'),
-    createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-    validatedAt: timestamp('validated_at', { withTimezone: true }),
+    sourceDocument: text("source_document"),
+    createdById: uuid("created_by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    validatedAt: timestamp("validated_at", { withTimezone: true }),
   },
   (table) => [
-    uniqueIndex('operations_reference_key').on(table.reference),
-    index('operations_kind_status_idx').on(table.kind, table.status),
-    index('operations_scheduled_date_idx').on(table.scheduledDate),
+    uniqueIndex("operations_reference_key").on(table.reference),
+    index("operations_kind_status_idx").on(table.kind, table.status),
+    index("operations_scheduled_date_idx").on(table.scheduledDate),
   ],
 );
 
 export const operationLines = pgTable(
-  'operation_lines',
+  "operation_lines",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    operationId: uuid('operation_id')
+    id: uuid("id").primaryKey().defaultRandom(),
+    operationId: uuid("operation_id")
       .notNull()
-      .references(() => operations.id, { onDelete: 'cascade' }),
-    productId: uuid('product_id')
+      .references(() => operations.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
       .notNull()
-      .references(() => products.id, { onDelete: 'restrict' }),
+      .references(() => products.id, { onDelete: "restrict" }),
     /** Expected quantity on the document. */
-    demandQty: quantity('demand_qty').notNull().default(0),
+    demandQty: quantity("demand_qty").notNull().default(0),
     /** Actually received / picked / counted quantity. */
-    receivedQty: quantity('received_qty').notNull().default(0),
-    picked: boolean('picked').notNull().default(false),
+    receivedQty: quantity("received_qty").notNull().default(0),
+    picked: boolean("picked").notNull().default(false),
     /** Only set on adjustment lines. */
-    reason: adjustmentReasonEnum('reason'),
-    sortOrder: integer('sort_order').notNull().default(0),
+    reason: adjustmentReasonEnum("reason"),
+    sortOrder: integer("sort_order").notNull().default(0),
   },
-  (table) => [index('operation_lines_operation_idx').on(table.operationId)],
+  (table) => [index("operation_lines_operation_idx").on(table.operationId)],
 );
 
 /**
@@ -298,32 +300,32 @@ export const operationLines = pgTable(
  * `quantity` is signed relative to the company: +in, -out, 0 for internal moves.
  */
 export const stockMoves = pgTable(
-  'stock_moves',
+  "stock_moves",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    operationId: uuid('operation_id').references(() => operations.id, { onDelete: 'set null' }),
+    id: uuid("id").primaryKey().defaultRandom(),
+    operationId: uuid("operation_id").references(() => operations.id, { onDelete: "set null" }),
     /** Denormalized operation reference so the ledger reads without a join. */
-    reference: text('reference').notNull(),
-    productId: uuid('product_id')
+    reference: text("reference").notNull(),
+    productId: uuid("product_id")
       .notNull()
-      .references(() => products.id, { onDelete: 'restrict' }),
-    fromLocationId: uuid('from_location_id')
+      .references(() => products.id, { onDelete: "restrict" }),
+    fromLocationId: uuid("from_location_id")
       .notNull()
-      .references(() => locations.id, { onDelete: 'restrict' }),
-    toLocationId: uuid('to_location_id')
+      .references(() => locations.id, { onDelete: "restrict" }),
+    toLocationId: uuid("to_location_id")
       .notNull()
-      .references(() => locations.id, { onDelete: 'restrict' }),
-    quantity: quantity('quantity').notNull(),
-    kind: kindEnum('kind').notNull(),
-    status: statusEnum('status').notNull().default('Done'),
-    doneById: uuid('done_by_id').references(() => users.id, { onDelete: 'set null' }),
-    doneAt: timestamp('done_at', { withTimezone: true }).notNull().defaultNow(),
+      .references(() => locations.id, { onDelete: "restrict" }),
+    quantity: quantity("quantity").notNull(),
+    kind: kindEnum("kind").notNull(),
+    status: statusEnum("status").notNull().default("Done"),
+    doneById: uuid("done_by_id").references(() => users.id, { onDelete: "set null" }),
+    doneAt: timestamp("done_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    index('stock_moves_product_idx').on(table.productId),
-    index('stock_moves_done_at_idx').on(table.doneAt),
-    index('stock_moves_reference_idx').on(table.reference),
-    index('stock_moves_kind_status_idx').on(table.kind, table.status),
+    index("stock_moves_product_idx").on(table.productId),
+    index("stock_moves_done_at_idx").on(table.doneAt),
+    index("stock_moves_reference_idx").on(table.reference),
+    index("stock_moves_kind_status_idx").on(table.kind, table.status),
   ],
 );
 
@@ -383,12 +385,12 @@ export const operationsRelations = relations(operations, ({ one, many }) => ({
   sourceLocation: one(locations, {
     fields: [operations.sourceLocationId],
     references: [locations.id],
-    relationName: 'operationSourceLocation',
+    relationName: "operationSourceLocation",
   }),
   destLocation: one(locations, {
     fields: [operations.destLocationId],
     references: [locations.id],
-    relationName: 'operationDestLocation',
+    relationName: "operationDestLocation",
   }),
   createdBy: one(users, { fields: [operations.createdById], references: [users.id] }),
 }));
@@ -407,12 +409,12 @@ export const stockMovesRelations = relations(stockMoves, ({ one }) => ({
   fromLocation: one(locations, {
     fields: [stockMoves.fromLocationId],
     references: [locations.id],
-    relationName: 'moveFromLocation',
+    relationName: "moveFromLocation",
   }),
   toLocation: one(locations, {
     fields: [stockMoves.toLocationId],
     references: [locations.id],
-    relationName: 'moveToLocation',
+    relationName: "moveToLocation",
   }),
   doneBy: one(users, { fields: [stockMoves.doneById], references: [users.id] }),
 }));

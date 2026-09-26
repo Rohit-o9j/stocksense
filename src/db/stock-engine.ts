@@ -11,9 +11,9 @@
  * negative, and a move between two internal locations is zero — the total did
  * not change, only where it sits.
  */
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from "drizzle-orm";
 
-import type { Executor } from './index';
+import type { Executor } from "./index";
 import {
   kindEnum,
   locationKindEnum,
@@ -22,7 +22,7 @@ import {
   statusEnum,
   stockMoves,
   stockQuants,
-} from './schema';
+} from "./schema";
 
 export type OperationKind = (typeof kindEnum.enumValues)[number];
 export type LocationKind = (typeof locationKindEnum.enumValues)[number];
@@ -30,10 +30,10 @@ export type DocumentStatus = (typeof statusEnum.enumValues)[number];
 
 /** Document reference prefixes, matching the references the UI already renders. */
 const REFERENCE_PREFIX: Record<OperationKind, string> = {
-  Receipt: 'WH/IN',
-  Delivery: 'WH/OUT',
-  'Internal Transfer': 'WH/INT',
-  Adjustment: 'WH/ADJ',
+  Receipt: "WH/IN",
+  Delivery: "WH/OUT",
+  "Internal Transfer": "WH/INT",
+  Adjustment: "WH/ADJ",
 };
 
 export type LocationSummary = {
@@ -105,11 +105,11 @@ export async function nextReference(tx: Executor, kind: OperationKind): Promise<
     .where(eq(operations.kind, kind));
 
   const highest = rows.reduce((max, row) => {
-    const tail = Number(row.reference.split('/').at(-1));
+    const tail = Number(row.reference.split("/").at(-1));
     return Number.isFinite(tail) && tail > max ? tail : max;
   }, 0);
 
-  return `${REFERENCE_PREFIX[kind]}/${String(highest + 1).padStart(5, '0')}`;
+  return `${REFERENCE_PREFIX[kind]}/${String(highest + 1).padStart(5, "0")}`;
 }
 
 export type ApplyMoveInput = {
@@ -136,7 +136,7 @@ export async function applyMove(tx: Executor, input: ApplyMoveInput): Promise<vo
   if (!Number.isFinite(input.quantity) || input.quantity <= 0) {
     throw new Error(
       `applyMove needs a positive quantity, received ${input.quantity}. ` +
-        'Direction is expressed by the source and destination locations.',
+        "Direction is expressed by the source and destination locations.",
     );
   }
 
@@ -147,8 +147,8 @@ export async function applyMove(tx: Executor, input: ApplyMoveInput): Promise<vo
     throw new Error(`Source and destination are the same location (${from.fullName})`);
   }
 
-  const fromInternal = from.kind === 'Internal';
-  const toInternal = to.kind === 'Internal';
+  const fromInternal = from.kind === "Internal";
+  const toInternal = to.kind === "Internal";
 
   // Only internal locations carry tracked stock; vendors and customers do not.
   if (fromInternal) await adjustQuant(tx, input.productId, from.id, -input.quantity);
@@ -165,7 +165,7 @@ export async function applyMove(tx: Executor, input: ApplyMoveInput): Promise<vo
     toLocationId: to.id,
     quantity: signedQuantity,
     kind: input.kind,
-    status: 'Done',
+    status: "Done",
     ...(input.doneById !== undefined && { doneById: input.doneById }),
     ...(input.doneAt !== undefined && { doneAt: input.doneAt }),
   });

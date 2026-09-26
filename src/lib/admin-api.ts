@@ -5,11 +5,11 @@
  * routines the seed CLI uses, so what an admin loads from the browser is
  * identical to what `bun run db:seed` produces.
  */
-import { createServerFn } from '@tanstack/react-start';
-import { asc, eq, ne, sql } from 'drizzle-orm';
-import { z } from 'zod';
+import { createServerFn } from "@tanstack/react-start";
+import { asc, eq, ne, sql } from "drizzle-orm";
+import { z } from "zod";
 
-import { db } from '../db';
+import { db } from "../db";
 import {
   checkIntegrity,
   countRows,
@@ -19,9 +19,9 @@ import {
   seedBaseline,
   seedDemo,
   type IntegrityIssue,
-} from '../db/demo-data';
-import { users } from '../db/schema';
-import { requireAdmin, type Role } from './guards';
+} from "../db/demo-data";
+import { users } from "../db/schema";
+import { requireAdmin, type Role } from "./guards";
 
 export type AdminUserRow = {
   id: string;
@@ -49,20 +49,20 @@ export type AdminOverview = {
   };
 };
 
-const ROLES = ['Warehouse Staff', 'Inventory Manager', 'Admin'] as const;
+const ROLES = ["Warehouse Staff", "Inventory Manager", "Admin"] as const;
 
 /** Host only — never the credentials in the connection string. */
 function databaseHost(): string {
-  const url = process.env['DATABASE_URL'];
-  if (!url) return 'not configured';
+  const url = process.env["DATABASE_URL"];
+  if (!url) return "not configured";
   try {
     return new URL(url).host;
   } catch {
-    return 'unparseable';
+    return "unparseable";
   }
 }
 
-export const getAdminOverview = createServerFn({ method: 'GET' }).handler(
+export const getAdminOverview = createServerFn({ method: "GET" }).handler(
   async (): Promise<AdminOverview> => {
     await requireAdmin();
 
@@ -88,7 +88,7 @@ export const getAdminOverview = createServerFn({ method: 'GET' }).handler(
       .from(users)
       .orderBy(asc(users.createdAt));
 
-    const nodeEnv = process.env['NODE_ENV'] ?? 'development';
+    const nodeEnv = process.env["NODE_ENV"] ?? "development";
 
     return {
       counts,
@@ -106,8 +106,8 @@ export const getAdminOverview = createServerFn({ method: 'GET' }).handler(
       })),
       environment: {
         nodeEnv,
-        otpExposed: nodeEnv !== 'production',
-        sessionCookie: 'stocksense_session',
+        otpExposed: nodeEnv !== "production",
+        sessionCookie: "stocksense_session",
         databaseHost: databaseHost(),
       },
     };
@@ -118,20 +118,20 @@ export const getAdminOverview = createServerFn({ method: 'GET' }).handler(
 // Demo data
 // ---------------------------------------------------------------------------
 
-export const seedReferenceData = createServerFn({ method: 'POST' }).handler(
+export const seedReferenceData = createServerFn({ method: "POST" }).handler(
   async (): Promise<string> => {
     await requireAdmin();
     const result = await db.transaction((tx) => seedBaseline(tx));
     const added =
       result.categories + result.warehouses + result.locations + result.users === 0
-        ? 'Reference data was already complete.'
+        ? "Reference data was already complete."
         : `Added ${result.categories} categories, ${result.warehouses} warehouses, ` +
           `${result.locations} locations and ${result.users} demo logins.`;
     return added;
   },
 );
 
-export const seedDemoInventory = createServerFn({ method: 'POST' }).handler(
+export const seedDemoInventory = createServerFn({ method: "POST" }).handler(
   async (): Promise<string> => {
     await requireAdmin();
     const result = await db.transaction(async (tx) => {
@@ -151,17 +151,17 @@ const confirmInput = z.object({
   confirmation: z.string(),
 });
 
-export const resetInventory = createServerFn({ method: 'POST' })
+export const resetInventory = createServerFn({ method: "POST" })
   .validator((input: unknown) => confirmInput.parse(input))
   .handler(async ({ data }): Promise<string> => {
     await requireAdmin();
 
-    if (data.confirmation !== 'RESET') {
-      throw new Error('Type RESET to confirm.');
+    if (data.confirmation !== "RESET") {
+      throw new Error("Type RESET to confirm.");
     }
 
     await db.transaction((tx) => resetInventoryRows(tx));
-    return 'Inventory cleared. User accounts were left untouched.';
+    return "Inventory cleared. User accounts were left untouched.";
   });
 
 // ---------------------------------------------------------------------------
@@ -173,14 +173,14 @@ const roleInput = z.object({
   role: z.enum(ROLES),
 });
 
-export const setUserRole = createServerFn({ method: 'POST' })
+export const setUserRole = createServerFn({ method: "POST" })
   .validator((input: unknown) => roleInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     const actor = await requireAdmin();
 
     // Changing your own role is how an admin accidentally locks themselves out.
     if (data.userId === actor.id) {
-      throw new Error('You cannot change your own role. Ask another admin.');
+      throw new Error("You cannot change your own role. Ask another admin.");
     }
 
     const [target] = await db
@@ -189,17 +189,17 @@ export const setUserRole = createServerFn({ method: 'POST' })
       .where(eq(users.id, data.userId))
       .limit(1);
 
-    if (!target) throw new Error('That account no longer exists.');
+    if (!target) throw new Error("That account no longer exists.");
     if (target.role === data.role) return;
 
     // Demoting the last admin would leave nobody able to administer the system.
-    if (target.role === 'Admin' && data.role !== 'Admin') {
+    if (target.role === "Admin" && data.role !== "Admin") {
       const [remaining] = await db
         .select({ n: sql<number>`count(*)::int` })
         .from(users)
-        .where(eq(users.role, 'Admin'));
+        .where(eq(users.role, "Admin"));
       if ((remaining?.n ?? 0) <= 1) {
-        throw new Error('This is the only Admin. Promote someone else first.');
+        throw new Error("This is the only Admin. Promote someone else first.");
       }
     }
 
@@ -208,13 +208,13 @@ export const setUserRole = createServerFn({ method: 'POST' })
 
 const deleteInput = z.object({ userId: z.string().min(1) });
 
-export const deleteUser = createServerFn({ method: 'POST' })
+export const deleteUser = createServerFn({ method: "POST" })
   .validator((input: unknown) => deleteInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     const actor = await requireAdmin();
 
     if (data.userId === actor.id) {
-      throw new Error('You cannot delete your own account.');
+      throw new Error("You cannot delete your own account.");
     }
 
     const [target] = await db
@@ -225,14 +225,14 @@ export const deleteUser = createServerFn({ method: 'POST' })
 
     if (!target) return;
 
-    if (target.role === 'Admin') {
+    if (target.role === "Admin") {
       const [remaining] = await db
         .select({ n: sql<number>`count(*)::int` })
         .from(users)
         .where(ne(users.id, target.id));
       // Keep at least one other account around.
       if ((remaining?.n ?? 0) === 0) {
-        throw new Error('You cannot delete the last account.');
+        throw new Error("You cannot delete the last account.");
       }
     }
 

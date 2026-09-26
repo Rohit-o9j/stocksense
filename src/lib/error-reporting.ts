@@ -20,13 +20,9 @@
  * browser, so this module does not import from it.
  */
 
-export type ErrorSeverity = 'error' | 'warning' | 'info';
+export type ErrorSeverity = "error" | "warning" | "info";
 
-export type ErrorMechanism =
-  | 'manual'
-  | 'onerror'
-  | 'unhandledrejection'
-  | 'react_error_boundary';
+export type ErrorMechanism = "manual" | "onerror" | "unhandledrejection" | "react_error_boundary";
 
 export type CaptureOptions = {
   /** How the error reached us. Helps separate boundary catches from manual calls. */
@@ -79,10 +75,10 @@ export function clearErrorReporters(): void {
  */
 export function describeThrown(error: unknown): string {
   if (error instanceof Response) {
-    return `Response ${error.status}${error.url ? ` at ${error.url}` : ''}`;
+    return `Response ${error.status}${error.url ? ` at ${error.url}` : ""}`;
   }
   if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
+  if (typeof error === "string") return error;
   try {
     return JSON.stringify(error) ?? String(error);
   } catch {
@@ -99,13 +95,13 @@ export function captureError(
   options: CaptureOptions = {},
 ): ErrorReport {
   const stack = error instanceof Error ? error.stack : undefined;
-  const route = typeof window === 'undefined' ? undefined : window.location.pathname;
+  const route = typeof window === "undefined" ? undefined : window.location.pathname;
 
   const report: ErrorReport = {
     message: describeThrown(error),
     ...(stack !== undefined && { stack }),
-    severity: options.severity ?? 'error',
-    mechanism: options.mechanism ?? 'manual',
+    severity: options.severity ?? "error",
+    mechanism: options.mechanism ?? "manual",
     handled: options.handled ?? false,
     ...(route !== undefined && { route }),
     timestamp: new Date().toISOString(),
@@ -130,7 +126,7 @@ export function captureError(
 }
 
 function logFallback(report: ErrorReport): void {
-  const where = report.route === undefined ? '' : ` (${report.route})`;
+  const where = report.route === undefined ? "" : ` (${report.route})`;
   const label = `[${report.severity}] ${report.mechanism}${where}: ${report.message}`;
 
   // Pass the original throw through so devtools renders a clickable stack, and

@@ -134,12 +134,8 @@
           "name": "locations_warehouse_id_warehouses_id_fk",
           "tableFrom": "locations",
           "tableTo": "warehouses",
-          "columnsFrom": [
-            "warehouse_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["warehouse_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -147,12 +143,8 @@
           "name": "locations_parent_id_locations_id_fk",
           "tableFrom": "locations",
           "tableTo": "locations",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -244,12 +236,8 @@
           "name": "operation_lines_operation_id_operations_id_fk",
           "tableFrom": "operation_lines",
           "tableTo": "operations",
-          "columnsFrom": [
-            "operation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["operation_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -257,12 +245,8 @@
           "name": "operation_lines_product_id_products_id_fk",
           "tableFrom": "operation_lines",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -413,12 +397,8 @@
           "name": "operations_source_location_id_locations_id_fk",
           "tableFrom": "operations",
           "tableTo": "locations",
-          "columnsFrom": [
-            "source_location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_location_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -426,12 +406,8 @@
           "name": "operations_dest_location_id_locations_id_fk",
           "tableFrom": "operations",
           "tableTo": "locations",
-          "columnsFrom": [
-            "dest_location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["dest_location_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -439,12 +415,8 @@
           "name": "operations_created_by_id_users_id_fk",
           "tableFrom": "operations",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -533,12 +505,8 @@
           "name": "password_reset_otps_user_id_users_id_fk",
           "tableFrom": "password_reset_otps",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -652,12 +620,8 @@
           "name": "products_category_id_categories_id_fk",
           "tableFrom": "products",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -734,12 +698,8 @@
           "name": "reordering_rules_product_id_products_id_fk",
           "tableFrom": "reordering_rules",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -747,12 +707,8 @@
           "name": "reordering_rules_warehouse_id_warehouses_id_fk",
           "tableFrom": "reordering_rules",
           "tableTo": "warehouses",
-          "columnsFrom": [
-            "warehouse_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["warehouse_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -912,12 +868,8 @@
           "name": "stock_moves_operation_id_operations_id_fk",
           "tableFrom": "stock_moves",
           "tableTo": "operations",
-          "columnsFrom": [
-            "operation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["operation_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -925,12 +877,8 @@
           "name": "stock_moves_product_id_products_id_fk",
           "tableFrom": "stock_moves",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -938,12 +886,8 @@
           "name": "stock_moves_from_location_id_locations_id_fk",
           "tableFrom": "stock_moves",
           "tableTo": "locations",
-          "columnsFrom": [
-            "from_location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["from_location_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -951,12 +895,8 @@
           "name": "stock_moves_to_location_id_locations_id_fk",
           "tableFrom": "stock_moves",
           "tableTo": "locations",
-          "columnsFrom": [
-            "to_location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["to_location_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -964,12 +904,8 @@
           "name": "stock_moves_done_by_id_users_id_fk",
           "tableFrom": "stock_moves",
           "tableTo": "users",
-          "columnsFrom": [
-            "done_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["done_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1076,12 +1012,8 @@
           "name": "stock_quants_product_id_products_id_fk",
           "tableFrom": "stock_quants",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1089,12 +1021,8 @@
           "name": "stock_quants_location_id_locations_id_fk",
           "tableFrom": "stock_quants",
           "tableTo": "locations",
-          "columnsFrom": [
-            "location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["location_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1247,52 +1175,27 @@
     "public.adjustment_reason": {
       "name": "adjustment_reason",
       "schema": "public",
-      "values": [
-        "Damaged",
-        "Lost",
-        "Found",
-        "Miscount",
-        "Other"
-      ]
+      "values": ["Damaged", "Lost", "Found", "Miscount", "Other"]
     },
     "public.operation_kind": {
       "name": "operation_kind",
       "schema": "public",
-      "values": [
-        "Receipt",
-        "Delivery",
-        "Internal Transfer",
-        "Adjustment"
-      ]
+      "values": ["Receipt", "Delivery", "Internal Transfer", "Adjustment"]
     },
     "public.location_kind": {
       "name": "location_kind",
       "schema": "public",
-      "values": [
-        "Internal",
-        "Vendor",
-        "Customer",
-        "Inventory Loss"
-      ]
+      "values": ["Internal", "Vendor", "Customer", "Inventory Loss"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "Inventory Manager",
-        "Warehouse Staff"
-      ]
+      "values": ["Inventory Manager", "Warehouse Staff"]
     },
     "public.status": {
       "name": "status",
       "schema": "public",
-      "values": [
-        "Draft",
-        "Waiting",
-        "Ready",
-        "Done",
-        "Canceled"
-      ]
+      "values": ["Draft", "Waiting", "Ready", "Done", "Canceled"]
     }
   },
   "schemas": {},

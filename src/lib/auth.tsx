@@ -4,8 +4,8 @@
  * The signed-in user comes from the session cookie via `getCurrentUser`, so a
  * refresh keeps you signed in and there is no hardcoded account anywhere.
  */
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   changePassword as changePasswordFn,
@@ -18,10 +18,10 @@ import {
   updateProfile as updateProfileFn,
   type AuthUser,
   type OtpRequestResult,
-} from './auth-api';
+} from "./auth-api";
 
 export type { AuthUser };
-export type Role = AuthUser['role'];
+export type Role = AuthUser["role"];
 
 type AuthStore = {
   user: AuthUser | null;
@@ -36,7 +36,7 @@ type AuthStore = {
   changePassword: (input: { currentPassword: string; newPassword: string }) => Promise<void>;
 };
 
-const AUTH_KEY = ['auth', 'currentUser'] as const;
+const AUTH_KEY = ["auth", "currentUser"] as const;
 
 const AuthContext = createContext<AuthStore | null>(null);
 
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = await signInFn({ data: { email, password } });
       setUser(user);
       // Inventory visibility can depend on who is signed in.
-      await queryClient.invalidateQueries({ queryKey: ['stock'] });
+      await queryClient.invalidateQueries({ queryKey: ["stock"] });
       return user;
     },
     [queryClient, setUser],
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (input: { name: string; email: string; password: string }) => {
       const user = await signUpFn({ data: input });
       setUser(user);
-      await queryClient.invalidateQueries({ queryKey: ['stock'] });
+      await queryClient.invalidateQueries({ queryKey: ["stock"] });
       return user;
     },
     [queryClient, setUser],
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOutFn();
     setUser(null);
     // Drop cached inventory so nothing from the previous session lingers.
-    queryClient.removeQueries({ queryKey: ['stock'] });
+    queryClient.removeQueries({ queryKey: ["stock"] });
   }, [queryClient, setUser]);
 
   const updateProfile = useCallback(
@@ -116,6 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('AuthProvider missing');
+  if (!context) throw new Error("AuthProvider missing");
   return context;
 };

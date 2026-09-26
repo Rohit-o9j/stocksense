@@ -1,6 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from "@tanstack/react-router";
 
-import { AboutPage } from '@/components/about-page';
+import { AboutPage } from "@/components/about-page";
 
 /**
  * Standalone marketing page. Rendered outside StockShell by the session gate in
@@ -9,23 +9,23 @@ import { AboutPage } from '@/components/about-page';
  * Head tags are declared inline rather than via PageHead so this public route
  * does not pull the application shell into its bundle.
  */
-export const Route = createFileRoute('/about')({
+export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: 'About · StockSense' },
+      { title: "About · StockSense" },
       {
-        name: 'description',
+        name: "description",
         content:
-          'StockSense brings products, locations and stock movements into one structured inventory system.',
+          "StockSense brings products, locations and stock movements into one structured inventory system.",
       },
-      { property: 'og:title', content: 'About · StockSense' },
+      { property: "og:title", content: "About · StockSense" },
       {
-        property: 'og:description',
+        property: "og:description",
         content:
-          'StockSense brings products, locations and stock movements into one structured inventory system.',
+          "StockSense brings products, locations and stock movements into one structured inventory system.",
       },
-      { property: 'og:type', content: 'website' },
-      { name: 'twitter:card', content: 'summary_large_image' },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AboutPage,

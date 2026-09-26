@@ -47,17 +47,19 @@ StockSense addresses that with three things:
 
 Three levels, ranked. Each inherits everything below it.
 
-| Role | Can do | Cannot do |
-|---|---|---|
-| **Warehouse Staff** | Read all inventory, create receipts, edit draft documents, validate operations, run counting sheets | Create or edit products, categories, reorder rules, warehouses, locations |
-| **Inventory Manager** | Everything above, plus all master data and warehouse configuration | Manage users, load or reset demonstration data |
-| **Admin** | Everything above, plus user management, role changes, demo data control, system health | — |
+| Role                  | Can do                                                                                              | Cannot do                                                                 |
+| --------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **Warehouse Staff**   | Read all inventory, create receipts, edit draft documents, validate operations, run counting sheets | Create or edit products, categories, reorder rules, warehouses, locations |
+| **Inventory Manager** | Everything above, plus all master data and warehouse configuration                                  | Manage users, load or reset demonstration data                            |
+| **Admin**             | Everything above, plus user management, role changes, demo data control, system health              | —                                                                         |
 
 Ranking is implemented numerically in `src/lib/guards.ts` rather than by equality checks, so `requireManager()` naturally accepts an Admin:
 
 ```ts
-const RANK = { 'Warehouse Staff': 1, 'Inventory Manager': 2, Admin: 3 };
-export function atLeast(role: Role, minimum: Role) { return RANK[role] >= RANK[minimum]; }
+const RANK = { "Warehouse Staff": 1, "Inventory Manager": 2, Admin: 3 };
+export function atLeast(role: Role, minimum: Role) {
+  return RANK[role] >= RANK[minimum];
+}
 ```
 
 **Role assignment is server-side only.** The sign-up form does not send a role, and the server would ignore it if it did. The first account ever created becomes Admin so a fresh install is administrable; every account after it starts as Warehouse Staff and must be promoted from the admin dashboard.
@@ -66,7 +68,7 @@ export function atLeast(role: Role, minimum: Role) { return RANK[role] >= RANK[m
 
 ## Core concept: everything is a move
 
-Receipts, delivery orders, internal transfers, and stock adjustments look like four separate features. They are not. Each one is a **stock move from a source location to a destination location**, where vendors, customers, and inventory-loss are modelled as *virtual* locations that hold no tracked stock.
+Receipts, delivery orders, internal transfers, and stock adjustments look like four separate features. They are not. Each one is a **stock move from a source location to a destination location**, where vendors, customers, and inventory-loss are modelled as _virtual_ locations that hold no tracked stock.
 
 ```mermaid
 flowchart LR
@@ -94,12 +96,12 @@ flowchart LR
     classDef real fill:#ecfdf5,stroke:#10b981,color:#064e3b
 ```
 
-| Operation | From | To | Ledger sign | Net stock |
-|---|---|---|---|---|
-| Receipt | Vendors *(virtual)* | internal location | `+qty` | increases |
-| Delivery Order | internal location | Customers *(virtual)* | `−qty` | decreases |
-| Internal Transfer | internal location | internal location | `0` | unchanged, location moves |
-| Adjustment | Inventory Loss ↔ internal | `±qty` | either | increases or decreases |
+| Operation         | From                      | To                    | Ledger sign | Net stock                 |
+| ----------------- | ------------------------- | --------------------- | ----------- | ------------------------- |
+| Receipt           | Vendors _(virtual)_       | internal location     | `+qty`      | increases                 |
+| Delivery Order    | internal location         | Customers _(virtual)_ | `−qty`      | decreases                 |
+| Internal Transfer | internal location         | internal location     | `0`         | unchanged, location moves |
+| Adjustment        | Inventory Loss ↔ internal | `±qty`                | either      | increases or decreases    |
 
 The sign is **derived from the location kinds**, never passed in by a caller:
 
@@ -190,29 +192,29 @@ erDiagram
     operations ||--o{ stock_moves : ""
 ```
 
-| Table | Purpose | Notes |
-|---|---|---|
-| `users` | Accounts | Unique email, PBKDF2 hash, role enum, low-stock preference |
-| `password_reset_otps` | One-time reset codes | Hashed at rest, expiry, attempt counter |
-| `categories` | Product groups | Unique name |
-| `warehouses` | Physical sites | Unique short code used in document references |
-| `locations` | Storage and counterparties | `kind` = Internal / Vendor / Customer / Inventory Loss; self-referencing `parent_id`; unique `full_name` such as `Main / Stock` |
-| `products` | Catalog | Unique SKU, unit of measure, soft-delete via `active` |
-| `reordering_rules` | Min/max levels | Unique per `(product, warehouse)`; drives low-stock alerts |
-| `stock_quants` | **On-hand per location** | Unique per `(product, location)`; only the engine writes it |
-| `operations` | All four document types | `kind` + `status`; unique human `reference` like `WH/IN/00001` |
-| `operation_lines` | Document lines | Demand vs received quantity, picked flag, adjustment reason |
-| `stock_moves` | **The ledger** | Signed quantity, from/to location, who and when |
+| Table                 | Purpose                    | Notes                                                                                                                           |
+| --------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `users`               | Accounts                   | Unique email, PBKDF2 hash, role enum, low-stock preference                                                                      |
+| `password_reset_otps` | One-time reset codes       | Hashed at rest, expiry, attempt counter                                                                                         |
+| `categories`          | Product groups             | Unique name                                                                                                                     |
+| `warehouses`          | Physical sites             | Unique short code used in document references                                                                                   |
+| `locations`           | Storage and counterparties | `kind` = Internal / Vendor / Customer / Inventory Loss; self-referencing `parent_id`; unique `full_name` such as `Main / Stock` |
+| `products`            | Catalog                    | Unique SKU, unit of measure, soft-delete via `active`                                                                           |
+| `reordering_rules`    | Min/max levels             | Unique per `(product, warehouse)`; drives low-stock alerts                                                                      |
+| `stock_quants`        | **On-hand per location**   | Unique per `(product, location)`; only the engine writes it                                                                     |
+| `operations`          | All four document types    | `kind` + `status`; unique human `reference` like `WH/IN/00001`                                                                  |
+| `operation_lines`     | Document lines             | Demand vs received quantity, picked flag, adjustment reason                                                                     |
+| `stock_moves`         | **The ledger**             | Signed quantity, from/to location, who and when                                                                                 |
 
 ### Enums
 
-| Enum | Values |
-|---|---|
-| `user_role` | `Warehouse Staff`, `Inventory Manager`, `Admin` |
-| `status` | `Draft`, `Waiting`, `Ready`, `Done`, `Canceled` |
-| `operation_kind` | `Receipt`, `Delivery`, `Internal Transfer`, `Adjustment` |
-| `location_kind` | `Internal`, `Vendor`, `Customer`, `Inventory Loss` |
-| `adjustment_reason` | `Damaged`, `Lost`, `Found`, `Miscount`, `Other` |
+| Enum                | Values                                                   |
+| ------------------- | -------------------------------------------------------- |
+| `user_role`         | `Warehouse Staff`, `Inventory Manager`, `Admin`          |
+| `status`            | `Draft`, `Waiting`, `Ready`, `Done`, `Canceled`          |
+| `operation_kind`    | `Receipt`, `Delivery`, `Internal Transfer`, `Adjustment` |
+| `location_kind`     | `Internal`, `Vendor`, `Customer`, `Inventory Loss`       |
+| `adjustment_reason` | `Damaged`, `Lost`, `Found`, `Miscount`, `Other`          |
 
 Enum values are byte-identical to the TypeScript union types the UI consumes, so no mapping layer is needed between database and interface.
 
@@ -220,12 +222,12 @@ Enum values are byte-identical to the TypeScript union types the UI consumes, so
 
 Documents carry a human reference alongside their UUID primary key:
 
-| Kind | Prefix | Example |
-|---|---|---|
-| Receipt | `WH/IN` | `WH/IN/00001` |
-| Delivery | `WH/OUT` | `WH/OUT/00001` |
+| Kind              | Prefix   | Example        |
+| ----------------- | -------- | -------------- |
+| Receipt           | `WH/IN`  | `WH/IN/00001`  |
+| Delivery          | `WH/OUT` | `WH/OUT/00001` |
 | Internal Transfer | `WH/INT` | `WH/INT/00001` |
-| Adjustment | `WH/ADJ` | `WH/ADJ/00001` |
+| Adjustment        | `WH/ADJ` | `WH/ADJ/00001` |
 
 ---
 
@@ -261,14 +263,14 @@ Queries inside `applyMove` run **sequentially on purpose** — a single Postgres
 
 ## Authentication and sessions
 
-| Concern | Implementation |
-|---|---|
-| Password hashing | PBKDF2-SHA256, 210,000 iterations, 16-byte salt, via WebCrypto |
-| Hash format | `pbkdf2$<iterations>$<salt b64>$<key b64>` — self-describing, so iterations can be raised later without invalidating existing hashes |
-| Session | Encrypted, signed, `httpOnly` cookie via TanStack Start's session helpers |
-| Cookie contents | **User id only** |
-| Session lifetime | 14 days, `sameSite=lax`, `secure` in production |
-| Password reset | Six-digit OTP, hashed at rest, 10-minute expiry, 5-attempt cap, all outstanding codes burned on use |
+| Concern          | Implementation                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Password hashing | PBKDF2-SHA256, 210,000 iterations, 16-byte salt, via WebCrypto                                                                       |
+| Hash format      | `pbkdf2$<iterations>$<salt b64>$<key b64>` — self-describing, so iterations can be raised later without invalidating existing hashes |
+| Session          | Encrypted, signed, `httpOnly` cookie via TanStack Start's session helpers                                                            |
+| Cookie contents  | **User id only**                                                                                                                     |
+| Session lifetime | 14 days, `sameSite=lax`, `secure` in production                                                                                      |
+| Password reset   | Six-digit OTP, hashed at rest, 10-minute expiry, 5-attempt cap, all outstanding codes burned on use                                  |
 
 WebCrypto rather than bcrypt or argon2 because the same code has to run in Node, Bun, and the Cloudflare Workers runtime this project builds for — native addons do not.
 
@@ -282,12 +284,12 @@ Two deliberate anti-enumeration measures: a failed sign-in spends comparable tim
 
 Every server function begins with a guard. There are no unguarded endpoints except the ones that must be public.
 
-| Guard | Applies to |
-|---|---|
-| *(public)* | `signIn`, `signUp`, `signOut`, `requestPasswordOtp`, `resetPasswordWithOtp`, `getCurrentUser` |
-| `requireUser()` | `getSnapshot`, `createReceipt`, `updateOperation`, `validateOperation`, `applyAdjustment`, `updateProfile`, `changePassword` |
-| `requireManager()` | `createProduct`, `createCategory`, `saveReorderingRule`, `createWarehouse`, `createLocation` |
-| `requireAdmin()` | `getAdminOverview`, `seedReferenceData`, `seedDemoInventory`, `resetInventory`, `setUserRole`, `deleteUser` |
+| Guard              | Applies to                                                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| _(public)_         | `signIn`, `signUp`, `signOut`, `requestPasswordOtp`, `resetPasswordWithOtp`, `getCurrentUser`                                |
+| `requireUser()`    | `getSnapshot`, `createReceipt`, `updateOperation`, `validateOperation`, `applyAdjustment`, `updateProfile`, `changePassword` |
+| `requireManager()` | `createProduct`, `createCategory`, `saveReorderingRule`, `createWarehouse`, `createLocation`                                 |
+| `requireAdmin()`   | `getAdminOverview`, `seedReferenceData`, `seedDemoInventory`, `resetInventory`, `setUserRole`, `deleteUser`                  |
 
 This matters because server functions are ordinary HTTP endpoints. Disabling a button in the UI stops nobody from calling one directly, so the button state is a convenience and the guard is the control.
 
@@ -322,7 +324,7 @@ Category list with product counts. Rules table showing min, max, current on hand
 
 Status tabs with counts. The detail page is the fullest document editor: status stepper, supplier, scheduled date, destination location, source document, and an editable line table with product search, demand and received quantities.
 
-The action bar changes with status — *Mark as Ready* while Draft or Waiting, *Validate* when Ready, read-only once Done. Validating shows the stock impact per line before committing.
+The action bar changes with status — _Mark as Ready_ while Draft or Waiting, _Validate_ when Ready, read-only once Done. Validating shows the stock impact per line before committing.
 
 ### Delivery Orders (`/delivery-orders`) and Internal Transfers (`/internal-transfers`)
 
@@ -358,11 +360,11 @@ A standalone marketing page rendered **outside** the application shell and reach
 
 **2. Demonstration data.** Three actions, running the same routines as the seed CLI:
 
-| Action | Effect | Safety |
-|---|---|---|
-| Load reference data | Categories, warehouses, locations including virtual ones, two demo logins | Idempotent, additive |
-| Load demo inventory | 12 products, 6 completed and 10 in-flight documents, 21 ledger entries | Refuses if products already exist |
-| Reset inventory | Deletes all inventory, documents, ledger, locations, warehouses, categories | Requires typing `RESET`; **never deletes user accounts** |
+| Action              | Effect                                                                      | Safety                                                   |
+| ------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Load reference data | Categories, warehouses, locations including virtual ones, two demo logins   | Idempotent, additive                                     |
+| Load demo inventory | 12 products, 6 completed and 10 in-flight documents, 21 ledger entries      | Refuses if products already exist                        |
+| Reset inventory     | Deletes all inventory, documents, ledger, locations, warehouses, categories | Requires typing `RESET`; **never deletes user accounts** |
 
 **3. Access control.** Every user with an inline role select, plus removal. Self-lockout protections described above are enforced server-side, not just disabled in the UI. Deleting a user preserves their history, since documents reference users with `ON DELETE SET NULL`.
 
@@ -372,21 +374,21 @@ A standalone marketing page rendered **outside** the application shell and reach
 
 ## Tech stack
 
-| Layer | Choice | Why |
-|---|---|---|
-| Framework | TanStack Start | Full-stack React with typed file routes and server functions — no separate API to deploy or keep in sync |
-| Router | TanStack Router | Type-safe routes; invalid paths fail at compile time |
-| UI | React 19 + TypeScript | The interface is form- and table-heavy |
-| Components | shadcn/ui on Radix | Accessible primitives without adopting a whole design system |
-| Styling | Tailwind CSS v4 | Dense data layouts without fighting CSS |
-| Server state | TanStack Query | Cache invalidation after validating a document keeps every KPI honest |
-| Database | Neon Postgres | Serverless Postgres; real enums, transactions and exact numerics |
-| Driver | `@neondatabase/serverless` (`Pool`) | WebSocket pool, because the HTTP driver has no transactions |
-| ORM | Drizzle | TypeScript-native schema, generated SQL migrations, typed queries |
-| Validation | Zod | Every server function validates its input |
-| Auth | WebCrypto PBKDF2 + encrypted cookie sessions | Runs identically on Node, Bun and Workers |
-| Runtime | Bun | Package manager and script runner |
-| Build target | Nitro → Cloudflare module | Produced by `vite build` |
+| Layer        | Choice                                       | Why                                                                                                      |
+| ------------ | -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Framework    | TanStack Start                               | Full-stack React with typed file routes and server functions — no separate API to deploy or keep in sync |
+| Router       | TanStack Router                              | Type-safe routes; invalid paths fail at compile time                                                     |
+| UI           | React 19 + TypeScript                        | The interface is form- and table-heavy                                                                   |
+| Components   | shadcn/ui on Radix                           | Accessible primitives without adopting a whole design system                                             |
+| Styling      | Tailwind CSS v4                              | Dense data layouts without fighting CSS                                                                  |
+| Server state | TanStack Query                               | Cache invalidation after validating a document keeps every KPI honest                                    |
+| Database     | Neon Postgres                                | Serverless Postgres; real enums, transactions and exact numerics                                         |
+| Driver       | `@neondatabase/serverless` (`Pool`)          | WebSocket pool, because the HTTP driver has no transactions                                              |
+| ORM          | Drizzle                                      | TypeScript-native schema, generated SQL migrations, typed queries                                        |
+| Validation   | Zod                                          | Every server function validates its input                                                                |
+| Auth         | WebCrypto PBKDF2 + encrypted cookie sessions | Runs identically on Node, Bun and Workers                                                                |
+| Runtime      | Bun                                          | Package manager and script runner                                                                        |
+| Build target | Nitro → Cloudflare module                    | Produced by `vite build`                                                                                 |
 
 TypeScript runs strict, with `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` and `noPropertyAccessFromIndexSignature` all enabled. Optional properties are therefore set with conditional spreads rather than assigned `undefined`.
 
@@ -484,10 +486,10 @@ bun run dev
 
 Open `http://localhost:5173`. The seed prints its demo logins; both use the password `StockSense!2026`:
 
-| Email | Role |
-|---|---|
-| `alex@stocksense.test` | Inventory Manager |
-| `jordan@stocksense.test` | Warehouse Staff |
+| Email                    | Role              |
+| ------------------------ | ----------------- |
+| `alex@stocksense.test`   | Inventory Manager |
+| `jordan@stocksense.test` | Warehouse Staff   |
 
 To reach the admin dashboard, promote an account:
 
@@ -503,20 +505,20 @@ Then sign in as that account and open `/admin`, or use the **Admin** entry that 
 
 ## Scripts
 
-| Script | Purpose |
-|---|---|
-| `bun run dev` | Development server with HMR |
-| `bun run build` | Production build (client, SSR, Nitro) |
-| `bun run preview` | Serve the production build |
-| `bun run lint` | ESLint |
-| `bun run format` | Prettier |
-| `bun run db:generate` | Generate a migration from schema changes |
-| `bun run db:migrate` | Apply pending migrations |
-| `bun run db:studio` | Drizzle Studio |
-| `bun run db:seed` | Reference data only |
-| `bun run db:seed -- --demo` | Reference data + demo inventory |
-| `bun run db:seed -- --reset` | Clear inventory first (accounts are preserved) |
-| `bun run db:make-admin -- <email>` | Promote an account to Admin |
+| Script                             | Purpose                                        |
+| ---------------------------------- | ---------------------------------------------- |
+| `bun run dev`                      | Development server with HMR                    |
+| `bun run build`                    | Production build (client, SSR, Nitro)          |
+| `bun run preview`                  | Serve the production build                     |
+| `bun run lint`                     | ESLint                                         |
+| `bun run format`                   | Prettier                                       |
+| `bun run db:generate`              | Generate a migration from schema changes       |
+| `bun run db:migrate`               | Apply pending migrations                       |
+| `bun run db:studio`                | Drizzle Studio                                 |
+| `bun run db:seed`                  | Reference data only                            |
+| `bun run db:seed -- --demo`        | Reference data + demo inventory                |
+| `bun run db:seed -- --reset`       | Clear inventory first (accounts are preserved) |
+| `bun run db:make-admin -- <email>` | Promote an account to Admin                    |
 
 > `db:push` exists but is **not recommended**. It recreates tables it considers drifted, which silently empties them. Use `db:generate` followed by `db:migrate` so every change is a reviewable, committed SQL file.
 
@@ -524,11 +526,11 @@ Then sign in as that account and open `/admin`, or use the **Admin** entry that 
 
 ## Environment variables
 
-| Variable | Required | Notes |
-|---|---|---|
-| `DATABASE_URL` | yes | Neon pooled connection string. Must **not** be `VITE_`-prefixed, or Vite would inline the credential into the client bundle |
-| `SESSION_SECRET` | yes | At least 32 characters; encrypts and signs the session cookie |
-| `NODE_ENV` | no | When not `production`, password reset codes are returned to the browser for testing |
+| Variable         | Required | Notes                                                                                                                       |
+| ---------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`   | yes      | Neon pooled connection string. Must **not** be `VITE_`-prefixed, or Vite would inline the credential into the client bundle |
+| `SESSION_SECRET` | yes      | At least 32 characters; encrypts and signs the session cookie                                                               |
+| `NODE_ENV`       | no       | When not `production`, password reset codes are returned to the browser for testing                                         |
 
 `.env` is gitignored. `.env.example` documents the shape with placeholder values and is committed.
 
@@ -546,10 +548,10 @@ Schema changes follow a fixed loop:
 
 Current migrations:
 
-| File | Contents |
-|---|---|
-| `0000_old_runaways.sql` | 11 tables, 5 enums, 17 foreign keys, 21 indexes |
-| `0001_handy_colleen_wing.sql` | Adds `Admin` to `user_role` |
+| File                          | Contents                                        |
+| ----------------------------- | ----------------------------------------------- |
+| `0000_old_runaways.sql`       | 11 tables, 5 enums, 17 foreign keys, 21 indexes |
+| `0001_handy_colleen_wing.sql` | Adds `Admin` to `user_role`                     |
 
 ---
 

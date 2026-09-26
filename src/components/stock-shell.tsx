@@ -1,62 +1,471 @@
-import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Boxes, LayoutDashboard, Package, Tags, ChartNoAxesCombined, ArrowDownToLine, Truck, ArrowLeftRight, ClipboardList, History, Warehouse, Settings, Search, Bell, ChevronDown, Menu, X, LogOut, UserRound, Plus, CornerDownLeft, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useStock } from '@/lib/stock';
-import { useAuth } from '@/lib/auth';
-import { toast, Toaster } from 'sonner';
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Boxes,
+  LayoutDashboard,
+  Package,
+  Tags,
+  ChartNoAxesCombined,
+  ArrowDownToLine,
+  Truck,
+  ArrowLeftRight,
+  ClipboardList,
+  History,
+  Warehouse,
+  Settings,
+  Search,
+  Bell,
+  ChevronDown,
+  Menu,
+  X,
+  LogOut,
+  UserRound,
+  Plus,
+  CornerDownLeft,
+  ShieldCheck,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useStock } from "@/lib/stock";
+import { useAuth } from "@/lib/auth";
+import { toast, Toaster } from "sonner";
 
 const nav = [
- {label:'Dashboard',to:'/',icon:LayoutDashboard,group:''},
- {label:'Products',to:'/products',icon:Package,group:'CATALOG'},
- {label:'Categories',to:'/categories',icon:Tags,group:'CATALOG'},
- {label:'Reordering Rules',to:'/reordering-rules',icon:ChartNoAxesCombined,group:'CATALOG'},
- {label:'Receipts',to:'/receipts',icon:ArrowDownToLine,group:'OPERATIONS'},
- {label:'Delivery Orders',to:'/delivery-orders',icon:Truck,group:'OPERATIONS'},
- {label:'Internal Transfers',to:'/internal-transfers',icon:ArrowLeftRight,group:'OPERATIONS'},
- {label:'Inventory Adjustments',to:'/inventory-adjustments',icon:ClipboardList,group:'OPERATIONS'},
- {label:'Move History',to:'/move-history',icon:History,group:''},
- {label:'Warehouses & Locations',to:'/warehouses',icon:Warehouse,group:'SETTINGS'},
- {label:'My Profile',to:'/profile',icon:Settings,group:'SETTINGS'},
- {label:'About StockSense',to:'/about',icon:Boxes,group:'SETTINGS'},
+  { label: "Dashboard", to: "/", icon: LayoutDashboard, group: "" },
+  { label: "Products", to: "/products", icon: Package, group: "CATALOG" },
+  { label: "Categories", to: "/categories", icon: Tags, group: "CATALOG" },
+  {
+    label: "Reordering Rules",
+    to: "/reordering-rules",
+    icon: ChartNoAxesCombined,
+    group: "CATALOG",
+  },
+  { label: "Receipts", to: "/receipts", icon: ArrowDownToLine, group: "OPERATIONS" },
+  { label: "Delivery Orders", to: "/delivery-orders", icon: Truck, group: "OPERATIONS" },
+  {
+    label: "Internal Transfers",
+    to: "/internal-transfers",
+    icon: ArrowLeftRight,
+    group: "OPERATIONS",
+  },
+  {
+    label: "Inventory Adjustments",
+    to: "/inventory-adjustments",
+    icon: ClipboardList,
+    group: "OPERATIONS",
+  },
+  { label: "Move History", to: "/move-history", icon: History, group: "" },
+  { label: "Warehouses & Locations", to: "/warehouses", icon: Warehouse, group: "SETTINGS" },
+  { label: "My Profile", to: "/profile", icon: Settings, group: "SETTINGS" },
+  { label: "About StockSense", to: "/about", icon: Boxes, group: "SETTINGS" },
 ] as const;
 // Admin-only, so it is appended at render time rather than living in `nav`.
-const adminNav = {label:'Admin',to:'/admin',icon:ShieldCheck,group:'SETTINGS'} as const;
-export function StockShell({children}:{children:ReactNode}) {
- const {products,operations,role}=useStock(); const {user,signOut}=useAuth(); const navigate=useNavigate(); const path=useRouterState({select:s=>s.location.pathname});
- const displayName=user?.name??'Signed out'; const initials=displayName.split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]?.toUpperCase()??'').join('')||'?';
- const items=useMemo(()=>user?.role==='Admin'?[...nav,adminNav]:[...nav],[user?.role]);
- const [signingOut,setSigningOut]=useState(false);
- const [menu,setMenu]=useState(false),[palette,setPalette]=useState(false),[query,setQuery]=useState(''),[selected,setSelected]=useState(0),[logout,setLogout]=useState(false);
- const results=useMemo(()=>{
-  const q=query.trim().toLowerCase();
-  const screens=items.filter(x=>!q||x.label.toLowerCase().includes(q)).map(x=>({label:x.label,detail:'Screen',to:x.to}));
-  const prods=products.filter(x=>!q||`${x.name} ${x.sku}`.toLowerCase().includes(q)).map(x=>({label:x.name,detail:x.sku,to:`/products/${x.id}`}));
-  const ops=operations.filter(x=>!q||`${x.id} ${x.partner}`.toLowerCase().includes(q)).map(x=>({label:x.id,detail:`${x.kind} · ${x.status}`,to:x.kind==='Receipt'?`/receipts/${encodeURIComponent(x.id)}`:x.kind==='Adjustment'?'/inventory-adjustments':x.kind==='Delivery'?'/delivery-orders':'/internal-transfers'}));
-  return [...screens,...prods,...ops].slice(0,12);
- },[query,products,operations,items]);
- useEffect(()=>{const handle=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'||(e.key==='/'&&!['INPUT','TEXTAREA','SELECT'].includes((e.target as HTMLElement).tagName))){e.preventDefault();setPalette(true)}};document.addEventListener('keydown',handle);return()=>document.removeEventListener('keydown',handle)},[]);
- const openResult=(to:string)=>{setPalette(false);setQuery('');setSelected(0);setMenu(false);navigate({to:to as '/'})};
- const pending=operations.filter(o=>o.kind==='Receipt'&&o.status!=='Done'&&o.status!=='Canceled').length;
- const low=products.filter(p=>p.onHand<p.minimum);
- const current=items.find(n=>n.to===path)?.label|| (path.startsWith('/receipts/')?'Receipt detail':path.startsWith('/products/')?'Product detail':'StockSense');
- return <div className="min-h-dvh bg-background text-foreground flex">
-  {menu&&<Button variant="ghost" className="fixed inset-0 z-30 h-full w-full rounded-none bg-foreground/40 md:hidden" aria-label="Close navigation" onClick={()=>setMenu(false)} />}
-  <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-sidebar text-sidebar-foreground flex flex-col transition-transform md:translate-x-0 md:w-16 xl:w-64 ${menu?'translate-x-0':'-translate-x-full'}`}>
-   <div className="h-17 flex items-center gap-3 px-5 border-b border-sidebar-border"><Boxes className="size-6 shrink-0"/><strong className="text-lg md:hidden xl:block">StockSense</strong><Button variant="ghost" size="icon" className="ml-auto md:hidden text-sidebar-foreground" onClick={()=>setMenu(false)} aria-label="Close navigation"><X/></Button></div>
-   <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-5 px-2.5 space-y-1">{items.map((item,i)=>{const Icon=item.icon;const group=item.group&&items[i-1]?.group!==item.group;return <div key={item.to}>{group&&<p className="px-3 pt-5 pb-2 text-[10px] font-bold text-sidebar-foreground/55 tracking-widest md:hidden xl:block">{item.group}</p>}<Link to={item.to} title={item.label} onClick={()=>setMenu(false)} className={`flex items-center gap-3 rounded-md px-3 h-10 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-foreground ${path===item.to||item.to!=='/'&&path.startsWith(item.to+'/')?'bg-sidebar-accent text-sidebar-accent-foreground font-medium':'text-sidebar-foreground/75 hover:bg-sidebar-accent/65 hover:text-sidebar-accent-foreground'}`}><Icon className="size-4 shrink-0"/><span className="md:hidden xl:block truncate">{item.label}</span>{item.label==='Receipts'&&<span className="ml-auto rounded bg-sidebar-accent px-1.5 text-xs md:hidden xl:block">{pending}</span>}</Link></div>})}</nav>
-   <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="h-auto justify-start gap-3 border-t border-sidebar-border rounded-none py-4 px-5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"><span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sm">{initials}</span><span className="text-left md:hidden xl:block"><b className="block text-xs">{displayName}</b><small className="text-sidebar-foreground/65">{role}</small></span><ChevronDown className="ml-auto size-4 md:hidden xl:block"/></Button></DropdownMenuTrigger><DropdownMenuContent side="top" align="start" className="w-60"><DropdownMenuLabel>{displayName}<span className="block text-xs font-normal text-muted-foreground">{user?.email}</span></DropdownMenuLabel><DropdownMenuItem onSelect={()=>navigate({to:'/profile'})}><UserRound/> My Profile</DropdownMenuItem><DropdownMenuSeparator/><DropdownMenuItem onSelect={()=>setLogout(true)}><LogOut/> Logout</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
-  </aside>
-  <div className="min-w-0 flex-1 md:ml-16 xl:ml-64"><header className="sticky top-0 z-20 h-16 bg-card border-b border-border flex items-center justify-between gap-4 px-5 lg:px-8"><div className="flex items-center gap-3 min-w-0"><Button variant="ghost" size="icon" className="md:hidden" aria-label="Open navigation" onClick={()=>setMenu(true)}><Menu/></Button><span className="text-sm text-muted-foreground hidden sm:block">Workspace <span className="mx-2">/</span></span><strong className="text-sm truncate">{current}</strong></div><div className="flex items-center gap-2"><Button variant="outline" className="hidden sm:flex w-64 lg:w-80 justify-start text-muted-foreground font-normal" onClick={()=>setPalette(true)}><Search/> Search products or references… <kbd className="ml-auto text-xs border rounded px-1">Ctrl K</kbd></Button><Button variant="ghost" size="icon" className="sm:hidden" aria-label="Search" onClick={()=>setPalette(true)}><Search/></Button><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="relative" aria-label={`${low.length} low stock alerts`}><Bell/><span className="absolute -top-0.5 -right-0.5 rounded-full bg-destructive text-destructive-foreground text-[10px] min-w-4">{low.length}</span></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="w-72"><DropdownMenuLabel>Low stock alerts</DropdownMenuLabel>{low.slice(0,6).map(p=><DropdownMenuItem key={p.id} onSelect={()=>navigate({to:'/products/$id',params:{id:p.id}})}>{p.name} <span className="ml-auto text-muted-foreground">{p.onHand} / {p.minimum}</span></DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu></div></header><main className="mx-auto max-w-[1600px] px-5 lg:px-8 py-7 pb-28">{children}</main></div>
-  <Dialog open={palette} onOpenChange={v=>{setPalette(v);if(!v){setQuery('');setSelected(0)}}}><DialogContent className="p-0 gap-0 max-w-xl top-[30%]"><DialogTitle className="sr-only">Search StockSense</DialogTitle><DialogDescription className="sr-only">Search products, operations, and screens. Use arrow keys to navigate results.</DialogDescription><div className="flex items-center gap-3 px-4 border-b"><Search className="size-5 text-muted-foreground"/><input autoFocus aria-label="Search products, operations, and screens" value={query} onChange={e=>{setQuery(e.target.value);setSelected(0)}} onKeyDown={e=>{if(e.key==='ArrowDown'){e.preventDefault();setSelected(x=>Math.min(x+1,results.length-1))}if(e.key==='ArrowUp'){e.preventDefault();setSelected(x=>Math.max(0,x-1))}if(e.key==='Enter'&&results[selected])openResult(results[selected].to)}} className="w-full h-14 outline-none text-sm" placeholder="Search products, references, screens…"/></div><div role="listbox" aria-label="Search results" className="max-h-80 overflow-auto p-2">{results.length?results.map((r,i)=><Button role="option" aria-selected={selected===i} key={`${r.to}-${i}`} variant="ghost" onMouseEnter={()=>setSelected(i)} onClick={()=>openResult(r.to)} className={`w-full h-11 justify-start font-normal ${selected===i?'bg-accent':''}`}><span className="truncate">{r.label}</span><span className="ml-auto text-xs text-muted-foreground">{r.detail}</span>{selected===i&&<CornerDownLeft className="size-3"/>}</Button>):<p className="p-6 text-center text-sm text-muted-foreground">No matching results</p>}</div><div className="border-t px-4 py-2 text-xs text-muted-foreground">↑ ↓ navigate · Enter open · Esc close</div></DialogContent></Dialog>
-  <Dialog open={logout} onOpenChange={setLogout}><DialogContent><DialogTitle>Log out of StockSense?</DialogTitle><DialogDescription>You will need to sign in again to view or change stock.</DialogDescription><div className="flex justify-end gap-2"><Button variant="outline" onClick={()=>setLogout(false)} disabled={signingOut}>Stay</Button><Button disabled={signingOut} onClick={()=>{setSigningOut(true);void signOut().then(()=>{setLogout(false);navigate({to:'/auth',replace:true});toast.success('Signed out')}).catch((e:unknown)=>{toast.error(e instanceof Error?e.message:'Could not sign out')}).finally(()=>setSigningOut(false))}}>{signingOut?'Signing out…':'Log out'}</Button></div></DialogContent></Dialog>
-  <div aria-live="polite"><Toaster richColors position="bottom-right" toastOptions={{className:'stock-toast'}}/></div>
- </div>;
+const adminNav = { label: "Admin", to: "/admin", icon: ShieldCheck, group: "SETTINGS" } as const;
+export function StockShell({ children }: { children: ReactNode }) {
+  const { products, operations, role } = useStock();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const displayName = user?.name ?? "Signed out";
+  const initials =
+    displayName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "?";
+  const items = useMemo(
+    () => (user?.role === "Admin" ? [...nav, adminNav] : [...nav]),
+    [user?.role],
+  );
+  const [signingOut, setSigningOut] = useState(false);
+  const [menu, setMenu] = useState(false),
+    [palette, setPalette] = useState(false),
+    [query, setQuery] = useState(""),
+    [selected, setSelected] = useState(0),
+    [logout, setLogout] = useState(false);
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const screens = items
+      .filter((x) => !q || x.label.toLowerCase().includes(q))
+      .map((x) => ({ label: x.label, detail: "Screen", to: x.to }));
+    const prods = products
+      .filter((x) => !q || `${x.name} ${x.sku}`.toLowerCase().includes(q))
+      .map((x) => ({ label: x.name, detail: x.sku, to: `/products/${x.id}` }));
+    const ops = operations
+      .filter((x) => !q || `${x.id} ${x.partner}`.toLowerCase().includes(q))
+      .map((x) => ({
+        label: x.id,
+        detail: `${x.kind} · ${x.status}`,
+        to:
+          x.kind === "Receipt"
+            ? `/receipts/${encodeURIComponent(x.id)}`
+            : x.kind === "Adjustment"
+              ? "/inventory-adjustments"
+              : x.kind === "Delivery"
+                ? "/delivery-orders"
+                : "/internal-transfers",
+      }));
+    return [...screens, ...prods, ...ops].slice(0, 12);
+  }, [query, products, operations, items]);
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => {
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") ||
+        (e.key === "/" &&
+          !["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement).tagName))
+      ) {
+        e.preventDefault();
+        setPalette(true);
+      }
+    };
+    document.addEventListener("keydown", handle);
+    return () => document.removeEventListener("keydown", handle);
+  }, []);
+  const openResult = (to: string) => {
+    setPalette(false);
+    setQuery("");
+    setSelected(0);
+    setMenu(false);
+    navigate({ to: to as "/" });
+  };
+  const pending = operations.filter(
+    (o) => o.kind === "Receipt" && o.status !== "Done" && o.status !== "Canceled",
+  ).length;
+  const low = products.filter((p) => p.onHand < p.minimum);
+  const current =
+    items.find((n) => n.to === path)?.label ||
+    (path.startsWith("/receipts/")
+      ? "Receipt detail"
+      : path.startsWith("/products/")
+        ? "Product detail"
+        : "StockSense");
+  return (
+    <div className="min-h-dvh bg-background text-foreground flex">
+      {menu && (
+        <Button
+          variant="ghost"
+          className="fixed inset-0 z-30 h-full w-full rounded-none bg-foreground/40 md:hidden"
+          aria-label="Close navigation"
+          onClick={() => setMenu(false)}
+        />
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-sidebar text-sidebar-foreground flex flex-col transition-transform md:translate-x-0 md:w-16 xl:w-64 ${menu ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        <div className="h-17 flex items-center gap-3 px-5 border-b border-sidebar-border">
+          <Boxes className="size-6 shrink-0" />
+          <strong className="text-lg md:hidden xl:block">StockSense</strong>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto md:hidden text-sidebar-foreground"
+            onClick={() => setMenu(false)}
+            aria-label="Close navigation"
+          >
+            <X />
+          </Button>
+        </div>
+        <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-5 px-2.5 space-y-1">
+          {items.map((item, i) => {
+            const Icon = item.icon;
+            const group = item.group && items[i - 1]?.group !== item.group;
+            return (
+              <div key={item.to}>
+                {group && (
+                  <p className="px-3 pt-5 pb-2 text-[10px] font-bold text-sidebar-foreground/55 tracking-widest md:hidden xl:block">
+                    {item.group}
+                  </p>
+                )}
+                <Link
+                  to={item.to}
+                  title={item.label}
+                  onClick={() => setMenu(false)}
+                  className={`flex items-center gap-3 rounded-md px-3 h-10 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-foreground ${path === item.to || (item.to !== "/" && path.startsWith(item.to + "/")) ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground/75 hover:bg-sidebar-accent/65 hover:text-sidebar-accent-foreground"}`}
+                >
+                  <Icon className="size-4 shrink-0" />
+                  <span className="md:hidden xl:block truncate">{item.label}</span>
+                  {item.label === "Receipts" && (
+                    <span className="ml-auto rounded bg-sidebar-accent px-1.5 text-xs md:hidden xl:block">
+                      {pending}
+                    </span>
+                  )}
+                </Link>
+              </div>
+            );
+          })}
+        </nav>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-auto justify-start gap-3 border-t border-sidebar-border rounded-none py-4 px-5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sm">
+                {initials}
+              </span>
+              <span className="text-left md:hidden xl:block">
+                <b className="block text-xs">{displayName}</b>
+                <small className="text-sidebar-foreground/65">{role}</small>
+              </span>
+              <ChevronDown className="ml-auto size-4 md:hidden xl:block" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start" className="w-60">
+            <DropdownMenuLabel>
+              {displayName}
+              <span className="block text-xs font-normal text-muted-foreground">{user?.email}</span>
+            </DropdownMenuLabel>
+            <DropdownMenuItem onSelect={() => navigate({ to: "/profile" })}>
+              <UserRound /> My Profile
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => setLogout(true)}>
+              <LogOut /> Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </aside>
+      <div className="min-w-0 flex-1 md:ml-16 xl:ml-64">
+        <header className="sticky top-0 z-20 h-16 bg-card border-b border-border flex items-center justify-between gap-4 px-5 lg:px-8">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              aria-label="Open navigation"
+              onClick={() => setMenu(true)}
+            >
+              <Menu />
+            </Button>
+            <span className="text-sm text-muted-foreground hidden sm:block">
+              Workspace <span className="mx-2">/</span>
+            </span>
+            <strong className="text-sm truncate">{current}</strong>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="hidden sm:flex w-64 lg:w-80 justify-start text-muted-foreground font-normal"
+              onClick={() => setPalette(true)}
+            >
+              <Search /> Search products or references…{" "}
+              <kbd className="ml-auto text-xs border rounded px-1">Ctrl K</kbd>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="sm:hidden"
+              aria-label="Search"
+              onClick={() => setPalette(true)}
+            >
+              <Search />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  aria-label={`${low.length} low stock alerts`}
+                >
+                  <Bell />
+                  <span className="absolute -top-0.5 -right-0.5 rounded-full bg-destructive text-destructive-foreground text-[10px] min-w-4">
+                    {low.length}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuLabel>Low stock alerts</DropdownMenuLabel>
+                {low.slice(0, 6).map((p) => (
+                  <DropdownMenuItem
+                    key={p.id}
+                    onSelect={() => navigate({ to: "/products/$id", params: { id: p.id } })}
+                  >
+                    {p.name}{" "}
+                    <span className="ml-auto text-muted-foreground">
+                      {p.onHand} / {p.minimum}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+        <main className="mx-auto max-w-[1600px] px-5 lg:px-8 py-7 pb-28">{children}</main>
+      </div>
+      <Dialog
+        open={palette}
+        onOpenChange={(v) => {
+          setPalette(v);
+          if (!v) {
+            setQuery("");
+            setSelected(0);
+          }
+        }}
+      >
+        <DialogContent className="p-0 gap-0 max-w-xl top-[30%]">
+          <DialogTitle className="sr-only">Search StockSense</DialogTitle>
+          <DialogDescription className="sr-only">
+            Search products, operations, and screens. Use arrow keys to navigate results.
+          </DialogDescription>
+          <div className="flex items-center gap-3 px-4 border-b">
+            <Search className="size-5 text-muted-foreground" />
+            <input
+              autoFocus
+              aria-label="Search products, operations, and screens"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSelected(0);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setSelected((x) => Math.min(x + 1, results.length - 1));
+                }
+                if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setSelected((x) => Math.max(0, x - 1));
+                }
+                if (e.key === "Enter" && results[selected]) openResult(results[selected].to);
+              }}
+              className="w-full h-14 outline-none text-sm"
+              placeholder="Search products, references, screens…"
+            />
+          </div>
+          <div role="listbox" aria-label="Search results" className="max-h-80 overflow-auto p-2">
+            {results.length ? (
+              results.map((r, i) => (
+                <Button
+                  role="option"
+                  aria-selected={selected === i}
+                  key={`${r.to}-${i}`}
+                  variant="ghost"
+                  onMouseEnter={() => setSelected(i)}
+                  onClick={() => openResult(r.to)}
+                  className={`w-full h-11 justify-start font-normal ${selected === i ? "bg-accent" : ""}`}
+                >
+                  <span className="truncate">{r.label}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{r.detail}</span>
+                  {selected === i && <CornerDownLeft className="size-3" />}
+                </Button>
+              ))
+            ) : (
+              <p className="p-6 text-center text-sm text-muted-foreground">No matching results</p>
+            )}
+          </div>
+          <div className="border-t px-4 py-2 text-xs text-muted-foreground">
+            ↑ ↓ navigate · Enter open · Esc close
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={logout} onOpenChange={setLogout}>
+        <DialogContent>
+          <DialogTitle>Log out of StockSense?</DialogTitle>
+          <DialogDescription>
+            You will need to sign in again to view or change stock.
+          </DialogDescription>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setLogout(false)} disabled={signingOut}>
+              Stay
+            </Button>
+            <Button
+              disabled={signingOut}
+              onClick={() => {
+                setSigningOut(true);
+                void signOut()
+                  .then(() => {
+                    setLogout(false);
+                    navigate({ to: "/auth", replace: true });
+                    toast.success("Signed out");
+                  })
+                  .catch((e: unknown) => {
+                    toast.error(e instanceof Error ? e.message : "Could not sign out");
+                  })
+                  .finally(() => setSigningOut(false));
+              }}
+            >
+              {signingOut ? "Signing out…" : "Log out"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <div aria-live="polite">
+        <Toaster richColors position="bottom-right" toastOptions={{ className: "stock-toast" }} />
+      </div>
+    </div>
+  );
 }
-export function PageHead(title:string,description:string) { return {meta:[{title:`${title} · StockSense`},{name:'description',content:description},{property:'og:title',content:`${title} · StockSense`},{property:'og:description',content:description},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}; }
-export function PageTitle({title,subtitle,action}:{title:string;subtitle?:string;action?:ReactNode}){return <div className="flex flex-wrap items-start justify-between gap-4 mb-6"><div><h1 className="text-xl font-semibold">{title}</h1>{subtitle&&<p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}</div>{action}</div>}
-export function MasterButton({children,onClick}:{children:ReactNode;onClick?:()=>void}){const {role}=useStock();return <span title={role==='Warehouse Staff'?'Inventory Manager access required':undefined} className="inline-flex"><Button onClick={onClick} disabled={role==='Warehouse Staff'}><Plus/>{children}</Button></span>}
-export function StatusPill({status}:{status:string}){return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${status==='Done'||status==='In Stock'?'bg-success-subtle text-success border-success/20':status==='Ready'?'bg-info-subtle text-info border-info/20':status==='Waiting'||status==='Low Stock'?'bg-warning-subtle text-warning border-warning/20':status==='Canceled'||status==='Out of Stock'?'bg-danger-subtle text-danger border-danger/20':'bg-muted text-muted-foreground border-border'}`}>{status}</span>}
-export function Delta({value,unit}:{value:number;unit?:string|undefined}){return <span className={`font-medium tabular-nums ${value>0?'text-success':value<0?'text-danger':'text-muted-foreground'}`}>{value>0?'+':''}{value} {unit}</span>}
+export function PageHead(title: string, description: string) {
+  return {
+    meta: [
+      { title: `${title} · StockSense` },
+      { name: "description", content: description },
+      { property: "og:title", content: `${title} · StockSense` },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  };
+}
+export function PageTitle({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+      <div>
+        <h1 className="text-xl font-semibold">{title}</h1>
+        {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+export function MasterButton({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
+  const { role } = useStock();
+  return (
+    <span
+      title={role === "Warehouse Staff" ? "Inventory Manager access required" : undefined}
+      className="inline-flex"
+    >
+      <Button onClick={onClick} disabled={role === "Warehouse Staff"}>
+        <Plus />
+        {children}
+      </Button>
+    </span>
+  );
+}
+export function StatusPill({ status }: { status: string }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${status === "Done" || status === "In Stock" ? "bg-success-subtle text-success border-success/20" : status === "Ready" ? "bg-info-subtle text-info border-info/20" : status === "Waiting" || status === "Low Stock" ? "bg-warning-subtle text-warning border-warning/20" : status === "Canceled" || status === "Out of Stock" ? "bg-danger-subtle text-danger border-danger/20" : "bg-muted text-muted-foreground border-border"}`}
+    >
+      {status}
+    </span>
+  );
+}
+export function Delta({ value, unit }: { value: number; unit?: string | undefined }) {
+  return (
+    <span
+      className={`font-medium tabular-nums ${value > 0 ? "text-success" : value < 0 ? "text-danger" : "text-muted-foreground"}`}
+    >
+      {value > 0 ? "+" : ""}
+      {value} {unit}
+    </span>
+  );
+}

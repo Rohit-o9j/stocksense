@@ -5,22 +5,22 @@
  * signed-in user id is kept in an encrypted cookie. Nothing here trusts input
  * from the client beyond what the validators allow.
  */
-import { createServerFn } from '@tanstack/react-start';
-import { clearSession, useSession } from '@tanstack/react-start/server';
-import { and, eq, gt, isNull } from 'drizzle-orm';
-import { z } from 'zod';
+import { createServerFn } from "@tanstack/react-start";
+import { clearSession, useSession } from "@tanstack/react-start/server";
+import { and, eq, gt, isNull } from "drizzle-orm";
+import { z } from "zod";
 
-import { db } from '../db';
-import { passwordResetOtps, users } from '../db/schema';
-import { hashPassword, verifyPassword } from '../server/password';
-import { currentUser, loadUser, requireUser, type SessionUser } from './guards';
-import { sessionConfig, type SessionPayload } from './session';
+import { db } from "../db";
+import { passwordResetOtps, users } from "../db/schema";
+import { hashPassword, verifyPassword } from "../server/password";
+import { currentUser, loadUser, requireUser, type SessionUser } from "./guards";
+import { sessionConfig, type SessionPayload } from "./session";
 
 /** Re-exported so client code has one place to import the user shape from. */
 export type AuthUser = SessionUser;
 
 /** Deliberately vague so the form cannot be used to discover which emails exist. */
-const BAD_CREDENTIALS = 'That email and password combination does not match an account.';
+const BAD_CREDENTIALS = "That email and password combination does not match an account.";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
@@ -32,7 +32,7 @@ const OTP_MAX_ATTEMPTS = 5;
  * SECURITY: this must never be true in production — it would hand a password
  * reset code to anyone who knows an email address.
  */
-const EXPOSE_OTP = process.env['NODE_ENV'] !== 'production';
+const EXPOSE_OTP = process.env["NODE_ENV"] !== "production";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -42,11 +42,11 @@ function normalizeEmail(email: string): string {
 // Session
 // ---------------------------------------------------------------------------
 
-export const getCurrentUser = createServerFn({ method: 'GET' }).handler(
+export const getCurrentUser = createServerFn({ method: "GET" }).handler(
   async (): Promise<AuthUser | null> => currentUser(),
 );
 
-export const signOut = createServerFn({ method: 'POST' }).handler(async (): Promise<void> => {
+export const signOut = createServerFn({ method: "POST" }).handler(async (): Promise<void> => {
   await clearSession(sessionConfig);
 });
 
@@ -59,7 +59,7 @@ const signInInput = z.object({
   password: z.string().min(1),
 });
 
-export const signIn = createServerFn({ method: 'POST' })
+export const signIn = createServerFn({ method: "POST" })
   .validator((input: unknown) => signInInput.parse(input))
   .handler(async ({ data }): Promise<AuthUser> => {
     const email = normalizeEmail(data.email);
@@ -89,12 +89,12 @@ export const signIn = createServerFn({ method: 'POST' })
   });
 
 const signUpInput = z.object({
-  name: z.string().trim().min(1, 'Enter your name'),
+  name: z.string().trim().min(1, "Enter your name"),
   email: z.string().email(),
-  password: z.string().min(8, 'Use at least 8 characters'),
+  password: z.string().min(8, "Use at least 8 characters"),
 });
 
-export const signUp = createServerFn({ method: 'POST' })
+export const signUp = createServerFn({ method: "POST" })
   .validator((input: unknown) => signUpInput.parse(input))
   .handler(async ({ data }): Promise<AuthUser> => {
     const email = normalizeEmail(data.email);
@@ -105,7 +105,7 @@ export const signUp = createServerFn({ method: 'POST' })
       .where(eq(users.email, email))
       .limit(1);
 
-    if (existing) throw new Error('An account already exists for that email address.');
+    if (existing) throw new Error("An account already exists for that email address.");
 
     /**
      * Role is assigned here, never accepted from the client — otherwise anyone
@@ -114,7 +114,7 @@ export const signUp = createServerFn({ method: 'POST' })
      * Warehouse Staff and must be promoted from the admin dashboard.
      */
     const [anyUser] = await db.select({ id: users.id }).from(users).limit(1);
-    const role = anyUser ? 'Warehouse Staff' : 'Admin';
+    const role = anyUser ? "Warehouse Staff" : "Admin";
 
     const [created] = await db
       .insert(users)
@@ -126,13 +126,13 @@ export const signUp = createServerFn({ method: 'POST' })
       })
       .returning({ id: users.id });
 
-    if (!created) throw new Error('Could not create the account. Try again.');
+    if (!created) throw new Error("Could not create the account. Try again.");
 
     const session = await useSession<SessionPayload>(sessionConfig);
     await session.update({ userId: created.id });
 
     const user = await loadUser(created.id);
-    if (!user) throw new Error('Could not load the new account.');
+    if (!user) throw new Error("Could not load the new account.");
     return user;
   });
 
@@ -149,7 +149,7 @@ export type OtpRequestResult = {
   devCode?: string;
 };
 
-export const requestPasswordOtp = createServerFn({ method: 'POST' })
+export const requestPasswordOtp = createServerFn({ method: "POST" })
   .validator((input: unknown) => emailInput.parse(input))
   .handler(async ({ data }): Promise<OtpRequestResult> => {
     const email = normalizeEmail(data.email);
@@ -164,7 +164,7 @@ export const requestPasswordOtp = createServerFn({ method: 'POST' })
     if (!user) return { sent: true };
 
     const code = String(crypto.getRandomValues(new Uint32Array(1))[0] ?? 0)
-      .padStart(6, '0')
+      .padStart(6, "0")
       .slice(-6);
 
     await db.insert(passwordResetOtps).values({
@@ -184,11 +184,11 @@ export const requestPasswordOtp = createServerFn({ method: 'POST' })
 
 const resetInput = z.object({
   email: z.string().email(),
-  code: z.string().regex(/^\d{6}$/, 'Enter the 6 digit code'),
-  password: z.string().min(8, 'Use at least 8 characters'),
+  code: z.string().regex(/^\d{6}$/, "Enter the 6 digit code"),
+  password: z.string().min(8, "Use at least 8 characters"),
 });
 
-export const resetPasswordWithOtp = createServerFn({ method: 'POST' })
+export const resetPasswordWithOtp = createServerFn({ method: "POST" })
   .validator((input: unknown) => resetInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     const email = normalizeEmail(data.email);
@@ -199,7 +199,7 @@ export const resetPasswordWithOtp = createServerFn({ method: 'POST' })
       .where(eq(users.email, email))
       .limit(1);
 
-    if (!user) throw new Error('That code is not valid or has expired.');
+    if (!user) throw new Error("That code is not valid or has expired.");
 
     const candidates = await db
       .select({
@@ -216,7 +216,7 @@ export const resetPasswordWithOtp = createServerFn({ method: 'POST' })
         ),
       );
 
-      let matched: string | null = null;
+    let matched: string | null = null;
 
     for (const candidate of candidates) {
       if (candidate.attempts >= OTP_MAX_ATTEMPTS) continue;
@@ -230,7 +230,7 @@ export const resetPasswordWithOtp = createServerFn({ method: 'POST' })
         .where(eq(passwordResetOtps.id, candidate.id));
     }
 
-    if (!matched) throw new Error('That code is not valid or has expired.');
+    if (!matched) throw new Error("That code is not valid or has expired.");
 
     await db.transaction(async (tx) => {
       await tx
@@ -257,11 +257,11 @@ async function requireUserId(): Promise<string> {
 }
 
 const profileInput = z.object({
-  name: z.string().trim().min(1, 'Enter your name'),
+  name: z.string().trim().min(1, "Enter your name"),
   lowStockAlerts: z.boolean(),
 });
 
-export const updateProfile = createServerFn({ method: 'POST' })
+export const updateProfile = createServerFn({ method: "POST" })
   .validator((input: unknown) => profileInput.parse(input))
   .handler(async ({ data }): Promise<AuthUser> => {
     const userId = await requireUserId();
@@ -272,16 +272,16 @@ export const updateProfile = createServerFn({ method: 'POST' })
       .where(eq(users.id, userId));
 
     const user = await loadUser(userId);
-    if (!user) throw new Error('Your account could not be loaded.');
+    if (!user) throw new Error("Your account could not be loaded.");
     return user;
   });
 
 const changePasswordInput = z.object({
-  currentPassword: z.string().min(1, 'Enter your current password'),
-  newPassword: z.string().min(8, 'Use at least 8 characters'),
+  currentPassword: z.string().min(1, "Enter your current password"),
+  newPassword: z.string().min(8, "Use at least 8 characters"),
 });
 
-export const changePassword = createServerFn({ method: 'POST' })
+export const changePassword = createServerFn({ method: "POST" })
   .validator((input: unknown) => changePasswordInput.parse(input))
   .handler(async ({ data }): Promise<void> => {
     const userId = await requireUserId();
@@ -292,11 +292,11 @@ export const changePassword = createServerFn({ method: 'POST' })
       .where(eq(users.id, userId))
       .limit(1);
 
-    if (!row) throw new Error('Your account could not be loaded.');
+    if (!row) throw new Error("Your account could not be loaded.");
 
     // Never let a stolen session change a password without knowing the old one.
     const ok = await verifyPassword(data.currentPassword, row.passwordHash);
-    if (!ok) throw new Error('Your current password is not correct.');
+    if (!ok) throw new Error("Your current password is not correct.");
 
     await db
       .update(users)
